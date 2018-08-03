@@ -2,7 +2,7 @@
 # includes a class that defines what a Macro is and a class for the macro editor itself, interfacing that
 # with MONster.
 #
-# This is one of the six main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread) that controls the MONster GUI. 
+# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
@@ -39,6 +39,10 @@ class Macro():
         self.transform = transform
         self.stitch = stitch
         self.integrate = integrate
+        if self.calib_source != None:
+            self.parseDetectorData()
+        else:
+            self.ddata = None
         
     def __eq__(self, other):
         return type(other) == Macro and self.transform == other.transform and self.stitch == other.stitch and self.integrate == other.integrate and self.filename == other.filename and self.QRange == other.QRange and self.ChiRange == other.ChiRange and self.calib_source == other.calib_source and self.processed_filedir == other.processed_filedir and self.data_files == other.data_files
@@ -72,17 +76,22 @@ class Macro():
     def getChiRange(self):
         return self.ChiRange
     
-    def getDetectorData(self):
+    def parseDetectorData(self):
         try:
             d_in_pixel, Rotation_angle, tilt_angle, lamda, x0, y0 = parse_calib(str(self.calib_source))
         except:
+            traceback.print_exc()
             return
-        return (d_in_pixel, Rotation_angle, tilt_angle, lamda, x0, y0)
+        self.ddata = (d_in_pixel, Rotation_angle, tilt_angle, lamda, x0, y0)
             
+    def getDetectorData(self):
+        return self.ddata
+    
 class MacroEditor(QWidget):
-    def __init__(self, queueTabReference):
+    def __init__(self, windowreference):
         QWidget.__init__(self)
-        self.queueTabReference = queueTabReference
+        self.windowreference = windowreference
+        self.fieldsChanged = False
         self.curMacro = None
         self.tipLabel = QLabel("Note: Always save any changes you make before adding to the queue! Unsaved changes will not update the macro.")
         self.saveButton = QPushButton("Save this macro")
@@ -264,12 +273,22 @@ class MacroEditor(QWidget):
     def updateConnections(self):
         self.cancelButton.clicked.connect(lambda: self.close())
         self.loadMacroButton.clicked.connect(self.loadMacro)
-        self.addToQueueButton.clicked.connect(lambda: addMacroToQueue(self.queueTabReference))
+        self.addToQueueButton.clicked.connect(lambda: addMacroToQueue(self.windowreference))
         self.saveCustomCalib.clicked.connect(self.saveCalibAction)
         self.data_folder_button.clicked.connect(self.getDataSourceDirectoryPath)
         self.calib_folder_button.clicked.connect(self.getCalibSourcePath)
         self.processed_location_folder_button.clicked.connect(self.setProcessedLocation)        
         self.saveButton.clicked.connect(self.saveMacro)
+        
+        for editor in self.findChildren(ClickableLineEdit):
+            editor.textChanged.connect(lambda: self.setFieldsChanged(True))
+        for box in self.findChildren(QCheckBox):
+            if box != self.data_source_check:
+                box.stateChanged.connect(lambda: self.setFieldsChanged(True))        
+        
+    def setFieldsChanged(self, boo):
+        self.fieldsChanged = boo
+        print("BOOOOOOOOOOOOOOOO : %s" %boo)
         
     def getDataSourceDirectoryPath(self):
         if self.data_source_check.isChecked():
@@ -329,7 +348,7 @@ class MacroEditor(QWidget):
             return        
         
     def addToConsole(self, message):
-        self.queueTabReference.addToConsole(message)
+        self.windowreference.addToConsole(message)
         
     def saveMacro(self):
         if (str(self.calib_source.text()) == '' and str(self.dcenterx.text()) == '') or str(self.data_source.text()) == '' or str(self.q_min.text()) == '' or str(self.q_max.text()) == '' or str(self.chi_min.text()) == '' or str(self.chi_max.text()) == '':
@@ -372,7 +391,7 @@ class MacroEditor(QWidget):
             return
 
         self.curMacro = Macro(fileName, (str(self.q_min.text()), str(self.q_max.text())), (str(self.chi_min.text()), str(self.chi_max.text())), None, str(self.processed_location.text()), None, transform, stitch, integrate)
-
+        self.setFieldsChanged(False)
         
         with open(fileName, 'w') as macro:
             macro.write("qmin, qmax, chimin, chimax, calib_source, filename, processed_file_source, folder?, data_source_file(s)/directory\n")
@@ -439,18 +458,40 @@ class MacroEditor(QWidget):
             self.chi_min.setText(str(ChiRange[0]).rstrip())
             self.chi_max.setText(str(ChiRange[1]).rstrip())
             calib_source = data[4].rstrip()
-            self.calib_source.setText(calib_source)
+            if os.path.exists(calib_source):
+                self.calib_source.setText(calib_source)
+            else:
+                displayError(self.windowreference, "Could not locate calibration source specified in macro!")
+                QApplication.processEvents()
+                return
             self.loadCalibration()
             processedLocation = data[5].rstrip()
-            self.processed_location.setText(processedLocation)
+            if os.path.exists(processedLocation):
+                self.processed_location.setText(processedLocation)
+            else:
+                displayError(self.windowreference, "Could not locate processed location specified in macro!")      
+                QApplication.processEvents()
+                return
             folder = ""
             directory_or_files = data[6] # "1" if it's a folder, "0" if it's one or more files to process
             if directory_or_files == "1":
                 folder = data[7].rstrip()
-                self.data_source.setText(folder)
+                if os.path.exists(folder):
+                    self.data_source.setText(folder)
+                else:
+                    displayError(self.windowreference, "Could not locate data source specified in macro!")         
+                    QApplication.processEvents()
+                    return
                 self.files_to_process = "folder"
                 self.data_source_check.setChecked(True)
             else:
+                folder = os.path.dirname(data[7].rstrip())
+                if os.path.exists(folder):
+                    self.data_source.setText(folder)
+                else:
+                    displayError(self.windowreference, "Could not locate data source specified in macro!")                   
+                    QApplication.processEvents()
+                    return
                 self.data_source.setText(os.path.dirname(data[7]).rstrip())
                 self.data_source_check.setChecked(False)
                 self.files_to_process = []
@@ -468,6 +509,9 @@ class MacroEditor(QWidget):
                 self.data_label.setText("Current data source: %s" % os.path.basename(data[7]))
             else:
                 self.data_label.setText("Current data source: (multiple files)")
+            
+            self.setFieldsChanged(False)
+          
                                  
         except:
             traceback.print_exc()
@@ -499,7 +543,9 @@ def generateQueueWidgets(self):
     self.removeButton = QPushButton(" - ")
     self.removeButton.setStyleSheet("QPushButton {background-color : rgb(60, 60, 60); color: white; }")
     self.qconsole = QTextBrowser()
-    self.qconsole.setMinimumHeight(100)
+    self.qconsole.setMinimumHeight(150)
+    self.qconsole.setMaximumHeight(300)
+    
     self.qconsole.setFont(QFont("Avenir", 14))
     self.qconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")           
     self.startQueueButton = QPushButton("Start queue")
@@ -532,6 +578,13 @@ def generateQueueWidgets(self):
     self.queue_bar.setDataColors([(0, QColor(qRgb(34, 200, 157))), (1, QColor(qRgb(34, 200, 157)))])
     self.queue_bar.setRange(0, 100)
     self.queue_bar.setValue(0)        
+    
+    self.queue_bar_files_label = QLabel("Percentage of current process completed")
+    self.queue_bar_files_label.setFont(QFont("Avenir", 16))
+    self.queue_bar_files_label.setStyleSheet("QLabel {color: rgb(34, 200, 157);}")
+    self.queue_bar_label = QLabel("Percentage of current macro completed")
+    self.queue_bar_label.setFont(QFont("Avenir", 16))
+    self.queue_bar_label.setStyleSheet("QLabel {color: rgb(34, 200, 157);}")
 
     
 def generateQueueLayout(self):
@@ -543,13 +596,32 @@ def generateQueueLayout(self):
     add_remove_box.addStretch()
     v_box.addLayout(add_remove_box)
     v_box.addWidget(self.startQueueButton)
-    v_box.addStretch()
+    v1 = QVBoxLayout()
+    v2 = QVBoxLayout()
+    barfilesbox = QHBoxLayout()
+    barfilesbox.addStretch()
+    barfilesbox.addWidget(self.queue_bar_files)
+    v1.addLayout(barfilesbox)
+    v1.addWidget(self.queue_bar_files_label)
+    v1.setSpacing(0)
+    
+    v2.addWidget(self.queue_bar)
+    v2.addWidget(self.queue_bar_label)
+    v2.setSpacing(0)
+    
+    line = QFrame()
+    line.setFrameShape(QFrame.VLine)
+    line.setStyleSheet("QFrame {color: rgb(34, 200, 157);}")
+    
     h = QHBoxLayout()
     h.addStretch()
-    h.addWidget(self.queue_bar_files)
-    h.addWidget(self.queue_bar)
+    h.addLayout(v1)
+    h.addWidget(line)
+    h.addLayout(v2)
     h.addStretch()
     v_box.addLayout(h)
+    
+  
     v_box.addWidget(self.qconsole)
     return v_box
 
@@ -558,14 +630,22 @@ def beginQueue(self):
     if len(self.macroQueue) < 1:
         self.addToConsole("No elements in the queue!")
         return
-    self.addToConsole("*************************************************")
-    self.addToConsole("**************Beginning Queue...****************")
-    self.addToConsole("*************************************************")
-    increment = (1/float(len(self.macroQueue)))*100
+    self.addToConsole("*****************************************************************")
+    self.addToConsole("**********************Beginning Queue...************************")
+    self.addToConsole("*****************************************************************")
+    count = 0
+    for mac in self.macroQueue:
+        if mac.shouldTransform():
+            count +=1
+        if mac.shouldStitch():
+            count += 1
+        if mac.shouldIntegrate():
+            count += 1
+    increment = (1/float(count))*100
     progress = 0
     self.queue_bar.setValue(progress)
     for macro in self.macroQueue:
-        self.addToConsole("Processing macro %s..." % os.path.basename(str(macro.getFilename())))
+        self.addToConsole("Processing %s..." % os.path.basename(str(macro.getFilename())))
         calib_source = macro.getCalibInfo()
         processed_filedir = macro.getProcessedFileDir()
         QRange = macro.getQRange()
@@ -580,19 +660,6 @@ def beginQueue(self):
             dataFiles = macro.getDataFiles()[1]
             data_source = os.path.dirname(macro.getDataFiles()[1][0])
             
-        # Adding percentage increments to see how much of current macro is finished (setting the radial bar and all),
-        # but need to itereate over all contents 
-        increment = 0
-        progress = 0
-        filesToProcess = 0
-        if macro.shouldTransform():
-            filesToProcess += calculateBarIncrement(dataFiles, data_source)
-        if macro.shouldStitch():
-            filesToProcess += calculateBarIncrement(dataFiles, data_source)
-        if macro.shouldIntegrate():
-            filesToProcess += calculateBarIncrement(dataFiles, data_source)
-            
-        increment = (1/float(filesToProcess))*100
         curFileCount = 0
             
         if macro.shouldTransform():
@@ -611,6 +678,7 @@ def beginQueue(self):
             self.connect(self.transformThread, SIGNAL("setRawImage(PyQt_PyObject)"), self.setRawImage)
             self.connect(self.transformThread, SIGNAL("enableWidgets()"), self.enableWidgets)
             self.connect(self.transformThread, SIGNAL("bar(int, PyQt_PyObject)"), self.setRadialBar)
+            self.connect(self.transformThread, SIGNAL("enable()"), self.enableWidgets)
             def addToProcessedFile():
                 self.fileProcessedCount += 1
             self.connect(self.transformThread, SIGNAL("fileProcessed()"), addToProcessedFile)
@@ -620,13 +688,13 @@ def beginQueue(self):
             while self.processDone == False:
                 time.sleep(.2)
                 QApplication.processEvents()
-                if self.fileProcessedCount > curFileCount:
-                    difference = self.fileProcessedCount - curFileCount
-                    progress += increment * difference
-                    self.queue_bar_files.setValue(progress)
+            progress += increment
+            self.queue_bar.setValue(progress)
                     
             
-        #if macro.shouldStitch():
+        if macro.shouldStitch():
+            progress += increment
+            self.queue_bar.setValue(progress)            
         
         if macro.shouldIntegrate():
             self.addToConsole('******************************************************************************')
@@ -641,10 +709,10 @@ def beginQueue(self):
             self.connect(self.integrateThread, SIGNAL("enableWidgets()"), self.enableWidgets)
             self.connect(self.integrateThread, SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), mi.set1DImage)
             self.connect(self.integrateThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.done)
-        
+            self.connect(self.integrateThread, SIGNAL("enable()"), self.enableWidgets)
             self.integrateThread.start()            
-        progress += increment
-        self.queue_bar.setValue(progress)
+            progress += increment
+            self.queue_bar.setValue(progress)
         
 # returns the number of files specified either by the dataFiles or the data source passed in
 def calculateBarIncrement(dataFiles, dataSource):
@@ -666,6 +734,12 @@ def addMacroToQueue(self):
     global curIndex
 
     try:
+        if not self.editor.integrateCheck.isChecked() and not self.editor.transformCheck.isChecked() and not self.editor.stitchCheck.isChecked():
+            displayError(self, "Select at least one of the following: Transform, Stitch, or Integrate.")
+            return
+        if self.editor.fieldsChanged == True:
+            displayError(self, "Please save your macro!")
+            return
         if self.editor.integrateCheck.isChecked():
             try:
                 QRange = (float(str(self.editor.q_min.text())), float(str(self.editor.q_max.text())))

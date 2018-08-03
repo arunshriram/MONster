@@ -1,7 +1,7 @@
 # This file initializes the widgets and the layout for the transform tab of the GUI. It interfaces
 # with the TransformThread to run the transform processes.
 #
-# This is one of the six main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread) that controls the MONster GUI. 
+# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
@@ -20,7 +20,7 @@ from monster_queueloader import *
 def generateTransformWidgets(self):
     pixmap = QPixmap('images/SLAC_LogoSD.png')
     self.raw_image = QLabel()
-    self.raw_image.setPixmap(pixmap.scaled(450, 450, Qt.KeepAspectRatio))
+    self.raw_image.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))
     self.raw_image.setStyleSheet("QLabel { border-style:outset; border-width:10px;  border-radius: 10px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } ")
 
     self.data_label = QLabel("Current data source:")
@@ -73,6 +73,7 @@ def generateTransformWidgets(self):
 
     self.console = QTextBrowser()
     self.console.setMinimumHeight(150)
+    self.console.setMaximumHeight(300)
     self.console.setFont(QFont("Avenir", 14))
     self.console.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")                
 

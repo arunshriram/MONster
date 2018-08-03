@@ -2,7 +2,7 @@
 # as well as peak fitting. Its main element is the class IntegrateThread, a thread that
 # runs parallel to the GUI.
 #
-# This is one of the six main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread) that controls the MONster GUI. 
+# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
@@ -65,11 +65,11 @@ class IntegrateThread(QThread):
         stage2Time = []
         increment = (1/float(len(files)))*100
         progress = 0
-        self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 1, progress)
         for filePath in files:
             filePath = filePath.rstrip()
             QApplication.processEvents()
             if (self.abort_flag):
+                writeIntegrateProperties()
                 self.emit(SIGNAL("enableWidgets()"))                
                 break
             filename = os.path.basename(filePath)
@@ -104,22 +104,22 @@ class IntegrateThread(QThread):
     
             save_path = os.path.join(os.path.dirname(filePath), 'Processed')
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
-            with open("lastrun.txt", 'w') as runFile:
-                runFile.write(str(self.dataPath)+'\n')
-                runFile.write(str(self.calibPath)+'\n')
-                runFile.write(str(self.processedPath) + '\n')
-                runFile.write('-\n')
+            with open("thisRun.txt", 'w') as runFile:
+                runFile.write("i_data_source = \"" + str(self.dataPath)+'\"\n')
+                runFile.write("i_calib_source = \"" + str(self.calibPath)+'\"\n')
+                runFile.write("i_processed_loc = \"" + str(self.processedPath) + '\"\n')
                 name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_1D.png')                
                 self.emit(SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
-                runFile.write(name + '\n')
+                runFile.write("one_d_image = \"" + name + '\"\n')
                 QApplication.processEvents()
-                runFile.write(str(self.QRange[0])+'\n')
-                runFile.write(str(self.QRange[1])+'\n')
-                runFile.write(str(self.ChiRange[0])+'\n')
-                runFile.write(str(self.ChiRange[1]))
+                runFile.write("qmin = \"" + str(self.QRange[0])+'\"\n')
+                runFile.write("qmax = \"" + str(self.QRange[1])+'\"\n')
+                runFile.write("chimin = \"" + str(self.ChiRange[0])+'\"\n')
+                runFile.write("chimax = \"" + str(self.ChiRange[1]) + "\"\n")
             progress += increment
+           
             self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 1, progress)
-                
+        writeIntegrateProperties()
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), loopTime, stage1Time, stage2Time)
         #self.stop()
 
@@ -304,3 +304,24 @@ class IntegrateThread(QThread):
     
     def run(self):
         self.beginIntegration()
+        
+# Writes the latest transform run info into the Properties.py file
+def writeIntegrateProperties():
+    prop = open("Properties.py", 'r')
+    properties = []
+    for line in prop:
+        properties.append(line)
+    prop.close()
+    with open("thisRun.txt", 'r') as thisrun:
+        properties[2] = thisrun.readline()
+        properties[4] = thisrun.readline()
+        properties[7] = thisrun.readline()
+        properties[10] = thisrun.readline()
+        properties[11] = thisrun.readline()
+        properties[12] = thisrun.readline()
+        properties[13] = thisrun.readline()
+        properties[14] = thisrun.readline()
+    propw = open("Properties.py", 'w')
+    for prawperty in properties:
+        propw.write(prawperty)
+    propw.close()

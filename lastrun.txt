@@ -1,9 +1,8 @@
 /Users/arunshriram/Documents/SLAC Internship/MONster/test
 /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
 /Users/arunshriram/Documents/SLAC Internship/MONster/test
-/Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed/k5_022318_1_24x24_t45_0303_gamma.png
-/Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed/k5_022318_1_24x24_t45_0303_1D.png
-0
-0
-0
-0
+/Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed/k5_022318_1_24x24_t45_0314_1D.png
+1.0
+6.0
+-20.0
+20.0

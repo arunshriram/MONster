@@ -1,0 +1,4 @@
+t_data_source = "/Users/arunshriram/Documents/SLAC Internship/MONster/test"
+t_calib_source = "/Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib"
+t_processed_loc = "/Users/arunshriram/Documents/SLAC Internship/MONster/test"
+two_d_image = "/Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed/k5_022318_1_24x24_t45_0313_gamma.png"

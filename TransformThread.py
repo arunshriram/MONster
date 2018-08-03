@@ -16,6 +16,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import glob, os, time, re, random, time, pyFAI
 import numpy as np
+import Properties
 #####################################################################
 #from monDimReduce import SAXSDimReduce all the things below are pertaining to this module
 from os.path import basename
@@ -23,7 +24,6 @@ from os.path import basename
 #from input_file_parsing import parse_calib
 from image_loader import load_image
 from data_reduction_smooth import data_reduction
-
 from saveDimRedPack import save_Qchi
 from nearest_neighbor_cosine_distances import nearst_neighbor_distance
 from PIL import Image
@@ -92,7 +92,7 @@ class TransformThread(QThread):
             fileList = sorted(glob.glob(os.path.join(self.dataPath, '*.tif')))
             if len(fileList) == 0:
                 self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "No files found in specified source directory!")
-                
+                self.emit(SIGNAL("enable()"))
                 return
            
             files = fileList[0:10000000000000000]
@@ -104,10 +104,12 @@ class TransformThread(QThread):
         increment = (1/float(len(files)))*100
         progress = 0
         self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 0, progress)
+        
         for filePath in files:
 
             QApplication.processEvents()
             if (self.abort_flag):
+                writeTransformProperties()
                 self.emit(SIGNAL("enableWidgets()"))                
                 break
             filename = os.path.basename(filePath)
@@ -143,31 +145,30 @@ class TransformThread(QThread):
             save_path = os.path.join(os.path.dirname(filePath), 'Processed')
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
-            with open("lastrun.txt", 'w') as runFile:
-                runFile.write(str(self.dataPath)+'\n')
-                runFile.write(str(self.calibPath)+'\n')
-                runFile.write(str(self.processedPath) + '\n')
+            with open("thisRun.txt", 'w') as runFile:
+                
+                runFile.write("t_data_source = \"" + str(self.dataPath)+'\"\n')
+                runFile.write("t_calib_source = \"" + str(self.calibPath)+'\"\n')
+                runFile.write("t_processed_loc = \"" + str(self.processedPath) + '\"\n')
                 name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma.png')                
                 self.emit(SIGNAL("setRawImage(PyQt_PyObject)"), name)
-                runFile.write(name + '\n')
-                name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_1D.png')                
-                self.emit(SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
-                runFile.write(name + '\n')
+                runFile.write("two_d_image = \"" + name + '\"\n')
+                     
                 QApplication.processEvents()
-                runFile.write('0\n')
-                runFile.write('0\n')
-                runFile.write('0\n')
-                runFile.write('0\n')
+                        
             progress += increment
+
             self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 0, progress)
             self.emit(SIGNAL("fileProcessed()"))
-        
+  
+        writeTransformProperties()
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), loopTime, stage1Time, stage2Time)
         #self.stop()
 
     # Plots and displays the q-chi graph by using the calibration data to calculate the graph's shape
         
-    def beginReduction(self, pathname):
+    def beginReduction(self, pathname):# Defines which lines are wanted/unwanted when writing previous run information during transforming
+
         '''
         Processing script, reducing images to 1D plots (Q-Chi, Texture, etc)
         '''
@@ -187,7 +188,8 @@ class TransformThread(QThread):
         base_filename = re.match('(.*?)[0-9]+.[a-zA-Z]+$',filename).group(1) # name w/o ind
 
         # Master CSV path
-        masterPath = os.path.join(folder_path,base_filename + 'master.csv')
+        masterPath = os.path.join(folder_path,base_filename + 'master.csv')# Defines which lines are wanted/unwanted when writing previous run information during transforming
+
 
         # generate a folder to put processed files
         save_path = os.path.join(self.processedPath, 'Processed')
@@ -204,7 +206,8 @@ class TransformThread(QThread):
         #attribute4=[['scan#', 'neighbor_distance']]
         #attribute5=[['scan#', 'SNR']]
 
-        ###### BEGIN READING CALIB FILE #################################################
+        ###### BEGIN READING CALIB FILE ################################################## Defines which lines are wanted/unwanted when writing previous run information during transforming
+
         # initializing params, transform the calibration parameters from WxDiff to Fit2D
         d_in_pixel = float(str(self.detectorData[0]))
         Rotation_angle = float(str(self.detectorData[1]))
@@ -259,4 +262,21 @@ class TransformThread(QThread):
         
     def run(self):
         self.beginTransform()
+        
+# Writes the latest transform run info into the Properties.py file
+def writeTransformProperties():
+    prop = open("Properties.py", 'r')
+    properties = []
+    for line in prop:
+        properties.append(line)
+    prop.close()
+    with open("thisRun.txt", 'r') as thisrun:
+        properties[0] = thisrun.readline()
+        properties[3] = thisrun.readline()
+        properties[5] = thisrun.readline()
+        properties[8] = thisrun.readline()
+    propw = open("Properties.py", 'w')
+    for prawperty in properties:
+        propw.write(prawperty)
+    propw.close()
         

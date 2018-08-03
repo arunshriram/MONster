@@ -2,7 +2,7 @@ tic % start timer; this takes XX seconds as written
 %% User inputs
 % ECHEM %
 dumpname = 'StitchedImgs_all'; % location for dumping images
-basename = 'Pilatus\Processed\b_mehta_glass_scan'; % start of filename to load
+basename = '/Users/arunshriram/Documents/SLAC Internship/MONster/stitch_7-2_samples/Pilatus/Processed/b_mehta_IR66BE_th0p2_scan'; % start of filename to load
 midname = '_'; % middle of filename to load
 endname = '_Qchi.mat'; % end of filename to load
 imgname = 'glass_zalignment_'; % for naming output images
@@ -191,19 +191,19 @@ colormap(jet(256))
 %xlim([2 8]) % these values specific to your data; CHECK!!!
 %ylim([-80 30]) % these values specific to your data; CHECK!!!
 caxis([0 3.5]) % these values specific to your data; CHECK!!!
-savepath = [dumpname,'\',imgname,phis{p},'_cropped.tif'];
+savepath = [dumpname,'/',imgname,phis{p},'_cropped.tif'];
 saveas(H,savepath)
 
 % save qchi and log(qchi) data files
-qchi0name = [dumpname,'\',imgname,phis{p},'_Qchi0.mat'];
-qchi0logname = [dumpname,'\',imgname,phis{p},'_Qchi0log.mat'];
+qchi0name = [dumpname,'/',imgname,phis{p},'_Qchi0.mat'];
+qchi0logname = [dumpname,'/',imgname,phis{p},'_Qchi0log.mat'];
 save(qchi0name,'Qchi0')
 save(qchi0logname,'Qchi0log')
 end
 
 % save q and chi data files
-chi0name = [dumpname,'\',imgname,'chi0.mat'];
-q0name = [dumpname,'\',imgname,'Q0.mat'];
+chi0name = [dumpname,'/',imgname,'chi0.mat'];
+q0name = [dumpname,'/',imgname,'Q0.mat'];
 save(q0name,'Q0')
 save(chi0name,'chi0')
 
@@ -229,12 +229,12 @@ colormap(jet(256))
 %xlim([2 8]) % these values specific to your data; CHECK!!!
 %ylim([-80 30]) % these values specific to your data; CHECK!!!
 caxis([0.5 4]) % these values specific to your data; CHECK!!!
-savepath = [dumpname,'\',imgname,'allphi_cropped.tif'];
+savepath = [dumpname,'/',imgname,'allphi_cropped.tif'];
 saveas(H,savepath)
 
 % Save qchi data
-qx0phiname = [dumpname,'\',imgname,'qx0_allphi.mat'];
-qx0logphiname = [dumpname,'\',imgname,'qx0log_allphi.mat'];
+qx0phiname = [dumpname,'/',imgname,'qx0_allphi.mat'];
+qx0logphiname = [dumpname,'/',imgname,'qx0log_allphi.mat'];
 save(qx0phiname,'Qchi0_allphi')
 save(qx0logphiname,'Qchi0log_allphi')
 

@@ -1,5 +1,0 @@
-qmin, qmax, chimin, chimax, calib_source, filename, processed_file_source, folder?, data_source_file(s)/directory
-1, 6, -20, 20, /Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/cal_28mar18.calib, /Users/arunshriram/Documents/SLAC Internship/monhitp-gui/test, 0, /Users/arunshriram/Documents/SLAC Internship/monhitp-gui/test/k5_022318_1_24x24_t45_0310.tif
-True
-False
-True

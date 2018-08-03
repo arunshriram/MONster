@@ -1,7 +1,7 @@
 # This file initializes the widgets, layouts, and various functions necessary to run
 # the "integrate" tab in MONster.
 #
-# This is one of the six main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread) that controls the MONster GUI. 
+# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
@@ -23,10 +23,12 @@ from input_file_parsing import parse_calib
 def generateIntegrateWidgets(self):
     pixmap = QPixmap('images/SLAC_LogoSD.png')
     self.one_d_graph = QLabel()
-    self.one_d_graph.setPixmap(pixmap.scaled(450, 450, Qt.KeepAspectRatio))
+    self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))
     self.one_d_graph.setStyleSheet("QLabel { border-style:outset; border-width:10px;  border-radius: 10px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } ")
     self.miconsole = QTextBrowser()
     self.miconsole.setMinimumHeight(150)
+    self.miconsole.setMaximumHeight(300)
+    
     self.miconsole.setFont(QFont("Avenir", 14))
     self.miconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")               
     self.q_min_label = QLabel('Q Min:')
@@ -159,9 +161,13 @@ def generateIntegrateWidgets(self):
     
 # Takes a filename and displays the 1D image specified by the filename on the GUI.
 def set1DImage(self, filename):
-    pixmap = QPixmap(filename)
-    self.one_d_graph.setPixmap(pixmap.scaled(450, 450, Qt.KeepAspectRatio))  
-    QApplication.processEvents()
+    try:
+        pixmap = QPixmap(filename)
+        self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
+        QApplication.processEvents()
+    except:
+        self.addToConsole("Could not load integrated image.")
+        
 
 # Generates the layout for the integrate tab.
 def generateIntegrateLayout(self):
@@ -253,9 +259,9 @@ def integrateThreadStart(self):
     self.disableWidgets()
     QApplication.processEvents()
     self.console.clear()
-    self.addToConsole('******************************************************************************')
-    self.addToConsole('********************* Beginning Integration Processing... *********************')
-    self.addToConsole('******************************************************************************')
+    self.addToConsole('********************************************************')
+    self.addToConsole('********** Beginning Integrate Processing... ***********')
+    self.addToConsole('********************************************************')
     QApplication.processEvents()
     # grab monitor folder
     #root = Tkinter.Tk()
@@ -290,7 +296,7 @@ def integrateThreadStart(self):
 #            ChiRange = (config['ChiMin'],config['ChiMax'])
     self.ChiRange = (float(str(self.chi_min.text())), float(str(self.chi_max.text())))    
     if abs(self.QRange[1]-self.QRange[0]) < .01:
-        self.addToConsole("Please select a more reasonable Q range.")
+        self.addToConsole("Please select a Q range.")
         self.enableWidgets()
         return
     if abs(self.ChiRange[1] - self.ChiRange[0]) < 0.1:
