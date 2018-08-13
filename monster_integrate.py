@@ -18,17 +18,53 @@ from ClickableLineEdit import *
 import os, datetime
 from IntegrateThread import *
 from input_file_parsing import parse_calib
+import pyqtgraph as pg
+
+# Adds functionality to right-clicking the graph (autoscaling it to bring it to view) and to dragging the mouse (adds a rectangle and zooms into whatever's in that rectangle)
+class CustomViewBox(pg.ViewBox):
+    def __init__(self, *args, **kwds):
+        pg.ViewBox.__init__(self, *args, **kwds)
+        self.setMouseMode(self.RectMode)
+
+    ## reimplement right-click to zoom out
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.RightButton:
+            self.autoRange()
+
+    def mouseDragEvent(self, ev):
+        if ev.button() == QtCore.Qt.RightButton:
+            ev.ignore()
+        else:
+            pg.ViewBox.mouseDragEvent(self, ev)
+            
+
 
 # Generates the widgets for the integrate tab.
 def generateIntegrateWidgets(self):
-    pixmap = QPixmap('images/SLAC_LogoSD.png')
-    self.one_d_graph = QLabel()
-    self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))
-    self.one_d_graph.setStyleSheet("QLabel { border-style:outset; border-width:10px;  border-radius: 10px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } ")
+    self.vb = CustomViewBox()
+    self.one_d_graph = pg.PlotWidget(viewBox=self.vb, enableMenu=True, title="")
+    # Crosshair stuff
+    self.label = pg.TextItem(anchor=(1, 1))
+    self.one_d_graph.addItem(self.label)
+    self.region = pg.LinearRegionItem()
+    self.region.setZValue(100)
+    self.vLine = pg.InfiniteLine(angle=90, movable=False)
+    self.hLine = pg.InfiniteLine(angle=0, movable=False)
+    self.one_d_graph.addItem(self.vLine, ignoreBounds=True)
+    self.one_d_graph.addItem(self.hLine, ignoreBounds=True)     
+    self.one_d_graph.autoRange() 
+    self.one_d_graph.sigRangeChanged.connect(self.updateRegion)
+    self.region.sigRegionChanged.connect(self.update)
+    self.one_d_graph.sigRangeChanged.connect(self.updateRegion)
+    self.proxy = pg.SignalProxy(self.one_d_graph.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)   
+    self.one_d_graph.setFixedWidth(self.imageWidth)
+    self.one_d_graph.setMaximumHeight(self.imageWidth)
+
     self.miconsole = QTextBrowser()
     self.miconsole.setMinimumHeight(150)
     self.miconsole.setMaximumHeight(300)
-    
+    self.miconsole.moveCursor(QTextCursor.End)
+
     self.miconsole.setFont(QFont("Avenir", 14))
     self.miconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")               
     self.q_min_label = QLabel('Q Min:')
@@ -66,8 +102,8 @@ def generateIntegrateWidgets(self):
     self.int_abort.setStyleSheet("background-color: rgb(255, 140, 140);")              
     self.int_abort.setFixedSize(150, 30)
     
-    self.int_datalabel = QLabel("Current data source:")
-    self.int_datalabel.setStyleSheet(self.textStyleSheet)
+    self.int_data_label = QLabel("Current data source:")
+    self.int_data_label.setStyleSheet(self.textStyleSheet)
     self.int_data_source = ClickableLineEdit()
     self.int_data_source.setStyleSheet(self.lineEditStyleSheet)
     
@@ -84,7 +120,7 @@ def generateIntegrateWidgets(self):
     
     self.int_processed_location_label = QLabel("Current location for processed files:")
     self.int_processed_location_label.setStyleSheet(self.textStyleSheet)
-    self.int_processed_location = ClickableLineEdit(self.int_data_source.text())
+    self.int_processed_location = ClickableLineEdit(str(self.int_data_source.text())  + "/Processed_Integrate")
     self.int_processed_location.setStyleSheet(self.lineEditStyleSheet)
     
     self.int_processed_location.setFixedWidth(580)
@@ -158,11 +194,17 @@ def generateIntegrateWidgets(self):
     self.int_bar.setRange(0, 100)
     self.int_bar.setValue(0)    
     
+    self.centerButton = QPushButton("Center Graph to Q and Chi Range")
+    self.centerButton.setStyleSheet("QPushButton {background-color: olive;}")
+    
+
     
 # Takes a filename and displays the 1D image specified by the filename on the GUI.
 def set1DImage(self, filename):
     try:
         pixmap = QPixmap(filename)
+        if filename == "":
+            pixmap = QPixmap("images/SLAC_LogoSD.png")        
         self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
         QApplication.processEvents()
     except:
@@ -193,6 +235,7 @@ def generateIntegrateLayout(self):
     h4.addStretch()
     h4.addWidget(self.chi_max)
     v_box1.addLayout(h4)
+    v_box1.addWidget(self.centerButton)
     h_box1.addStretch()
     h_box1.addWidget(self.int_bar)
     h_box1.addStretch()
@@ -207,7 +250,7 @@ def generateIntegrateLayout(self):
     h_box2.addWidget(self.int_data_folder_button)
     h_box2.addWidget(self.int_data_source_check)
     h_box2.addStretch()
-    layout.addWidget(self.int_datalabel)
+    layout.addWidget(self.int_data_label)
     layout.addLayout(h_box2)
     layout.addWidget(self.int_calib_label)
     h_box3 = QHBoxLayout()
@@ -252,11 +295,13 @@ def generateIntegrateLayout(self):
 # all fields correctly, and then loading and starting the IntegrateThread
 def integrateThreadStart(self):
 
-    if not self.int_data_source_check.isChecked() and self.files_to_process == "folder":
+    if not self.int_data_source_check.isChecked() and os.path.isdir(self.files_to_process[0]):
         self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
+        self.enableWidgets()
         return
         
     self.disableWidgets()
+    self.miconsole.moveCursor(QTextCursor.End)
     QApplication.processEvents()
     self.console.clear()
     self.addToConsole('********************************************************')
@@ -274,19 +319,24 @@ def integrateThreadStart(self):
         c2 = float(str(self.chi_max.text()))
     except:
         self.addToConsole("Please make sure you have entered in appropriate values for the QRange and the ChiRange.")
+        self.enableWidgets()
         return
     
     calibPath = str(self.int_calib_source.text())
     dataPath = str(self.int_data_source.text())
+    if  os.path.isdir(dataPath) and self.int_data_source_check.isChecked():
+        self.files_to_process = [dataPath]        
     if (calibPath is '' and str(self.int_detectordistance.text()) == '' and str(self.int_dcenterx.text()) == '' and str(self.int_dcentery.text()) == '' and str(self.int_detect_tilt_alpha.text()) == '' and str(self.int_detect_tilt_delta.text()) == '' and str(self.int_wavelength.text()) == '') or dataPath is '':
             
         self.addToConsole("Please make sure you have entered valid data or calibration source information.")
+        self.enableWidgets()
         return
 
     bkgdPath = os.path.expanduser('~/monHiTp/testBkgdImg/bg/a40_th2p0_t45_center_bg_0001.tif')
     #configPath = tkFileDialog.askopenfilename(title='Select Config File')
     if bkgdPath is '':
         self.win.addToConsole('No bkgd file supplied, aborting...')
+        self.enableWidgets()
         return
         
     self.addToConsole('Calibration File: ' + calibPath)
@@ -303,18 +353,20 @@ def integrateThreadStart(self):
         self.addToConsole("Please select a more reasonable Chi range.")
         self.enableWidgets()
         return        
-
     
+
+
     detectorData = (self.int_detectordistance.text(), self.int_detect_tilt_alpha.text(), self.int_detect_tilt_delta.text(), self.int_wavelength.text(), self.int_dcenterx.text(), self.int_dcentery.text())
-    self.integrateThread = IntegrateThread(self, dataPath, calibPath, str(self.int_processed_location.text()), detectorData, self.files_to_process, (self.QRange, self.ChiRange))
+    self.integrateThread = IntegrateThread(self, calibPath, str(self.int_processed_location.text()), detectorData, self.files_to_process, (self.QRange, self.ChiRange))
     self.integrateThread.setAbortFlag(False)
     self.int_abort.clicked.connect(self.integrateThread.abortClicked)
     
     self.connect(self.integrateThread, SIGNAL("addToConsole(PyQt_PyObject)"), self.addToConsole)
     self.connect(self.integrateThread, SIGNAL("enableWidgets()"), self.enableWidgets)
-    self.connect(self.integrateThread, SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), set1DImage)
+    #self.connect(self.integrateThread, SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), set1DImage)
     self.connect(self.integrateThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.done)
     self.connect(self.integrateThread, SIGNAL("bar(int, PyQt_PyObject)"), self.setRadialBar)
+    self.connect(self.integrateThread, SIGNAL("resetIntegrate(PyQt_PyObject)"), resetIntegrate)
     self.disableWidgets()
     self.integrateThread.start()
     
@@ -331,12 +383,13 @@ def getIntDataSourceDirectoryPath(self):
             if folderpath != '':
                 self.int_data_source.setText(folderpath)
                 self.int_data_label.setText("Current data source:")
-                self.int_processed_location.setText(self.data_source.text())
-                self.files_to_process = "folder"
+                self.int_processed_location.setText(folderpath + "/Processed_Integrate")
+                self.files_to_process = [folderpath]
         except:
             self.addToConsole("Something went wrong when trying to open your directory.")
     else:
         try:
+          
             filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
             filenames = [str(filename) for  filename in filenames]
             if len(filenames) < 2:
@@ -344,12 +397,27 @@ def getIntDataSourceDirectoryPath(self):
             else:
                 self.int_data_label.setText("Current data source: (multiple files)")
             self.int_data_source.setText(os.path.dirname(filenames[0]))
-            self.int_processed_location.setText(self.int_data_source.text())
+            self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")
             self.files_to_process = filenames
         except:
             #traceback.print_exc()
             self.addToConsole("Something went wrong when trying to select your files.")
     
+    
+def centerButtonClicked(self):
+    try:
+        q1 = float(str(self.q_min.text()))
+        q2 = float(str(self.q_max.text()))
+        chi1 = float(str(self.chi_min.text()))
+        chi2 = float(str(self.chi_max.text()))
+    except:
+        self.addToConsole("Please make sure you have correctly entered your Q and Chi ranges.")
+        self.enableWidgets()
+        return
+    self.one_d_graph.autoRange()
+    self.one_d_graph.setLimits(xMin=q1, xMax=q2)
+    
+        
 def loadIntCalibration(self):
     if str(self.int_calib_source.text()) != '':
         try:
@@ -390,3 +458,7 @@ def saveIntCalibAction(self):
         return
 
     
+    
+def resetIntegrate(self):
+    set1DImage(self, "images/SLAC_LogoSD.png")
+    self.int_bar.setValue(0)

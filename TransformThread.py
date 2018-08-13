@@ -28,22 +28,60 @@ from saveDimRedPack import save_Qchi
 from nearest_neighbor_cosine_distances import nearst_neighbor_distance
 from PIL import Image
 from scipy import signal
-
+import shutil
 ###############################################################
+
+# This class defines a detector data type
+class Detector():
+    def __init__(self, name, width, height):
+        self.name = name
+        self.width = width
+        self.height = height
+        
+    def __eq__(self, other):
+        return type(other) == Detector and self.name == other.name and self.width == other.width and self.height == other.height
+    
+    def __repr__(self):
+        return ("%s: , Width: %s, Height: %s" % (self.name, self.width, self.height))
+    
+    def getName(self):
+        return self.name
+    
+    def getWidth(self):
+        return self.width
+    
+    def getHeight(self):
+        return self.height
 # This class defines the TransformThread, the main processing thread to create and save q-chi plots
 # based on the tif and raw files the user supplies.
 class TransformThread(QThread):
 
-    def __init__(self, windowreference, processedPath, calibPath, dataPath, detectorData, files_to_process):
+    def __init__(self, windowreference, processedPath, calibPath, detectorData, files_to_process):
         QThread.__init__(self)
-        self.dataPath = dataPath
         self.calibPath = calibPath
         self.processedPath = processedPath
         self.detectorData = detectorData
         self.abort_flag = False
         self.files_to_process = files_to_process
         self.windowreference = windowreference
-    
+        self.curDetector = None
+        try:
+            if os.path.isdir(files_to_process[0]):
+                self.dataPath = files_to_process[0]
+            else:   
+                self.dataPath = os.path.dirname(files_to_process[0])
+        except TypeError: # Nonetype error happens when initializing transform thread with Nones
+            pass
+        if detectorData is not None:
+            detector = detectorData[6]
+            if ":" in detector:
+                detector = detector[:detector.index(":")]
+            
+            for detect in self.windowreference.detectorList:
+                if detect.getName() == detector:
+                    self.curDetector = detect
+                    break
+        
     def setAbortFlag(self, boo):
         self.abort_flag = boo
         
@@ -88,23 +126,31 @@ class TransformThread(QThread):
     def beginTransform(self):
         QApplication.processEvents()
         ##########################################Extension chooser?...
-        if self.files_to_process == "folder":
+        if os.path.isdir(self.files_to_process[0]):
             fileList = sorted(glob.glob(os.path.join(self.dataPath, '*.tif')))
             if len(fileList) == 0:
-                self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "No files found in specified source directory!")
-                self.emit(SIGNAL("enable()"))
-                return
+                fileList = sorted(glob.glob(os.path.join(self.dataPath, '*.raw')))
+                if len(fileList) == 0:
+                    self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "No files found in specified source directory!")
+                    self.emit(SIGNAL("enable()"))
+                    return
            
             files = fileList[0:10000000000000000]
         else:
-            files = self.files_to_process
+            files = [x for x in self.files_to_process if x.endswith('.raw') or x.endswith('.tif')]
         loopTime = []
         stage1Time = []
         stage2Time = []
         increment = (1/float(len(files)))*100
         progress = 0
         self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 0, progress)
+        self.emit(SIGNAL("resetTransform(PyQt_PyObject)"), self.windowreference) 
+        self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Using detector %s"% self.curDetector.getName())        
+        save_path = str(self.processedPath)
+        if os.path.exists(save_path):
+            shutil.rmtree(save_path)    
         
+        os.makedirs(save_path)
         for filePath in files:
 
             QApplication.processEvents()
@@ -119,6 +165,7 @@ class TransformThread(QThread):
             
             self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), '{0}'.format(filePath))
             self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), filename + ' detected, processing')
+            
             QApplication.processEvents()
             ########## Begin data reduction scripts ###########################
             self.beginReduction(filePath) #QRange=QRange, ChiRange=ChiRange) # this is where the MAIN PROCESSING STUFF HAPPENS
@@ -142,7 +189,7 @@ class TransformThread(QThread):
             stage2Time += [(stage2int - stage1int)]
         
     
-            save_path = os.path.join(os.path.dirname(filePath), 'Processed')
+            save_path = os.path.join(os.path.dirname(filePath), "Processed_Transform")
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
             with open("thisRun.txt", 'w') as runFile:
@@ -159,7 +206,6 @@ class TransformThread(QThread):
             progress += increment
 
             self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 0, progress)
-            self.emit(SIGNAL("fileProcessed()"))
   
         writeTransformProperties()
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), loopTime, stage1Time, stage2Time)
@@ -192,9 +238,9 @@ class TransformThread(QThread):
 
 
         # generate a folder to put processed files
-        save_path = os.path.join(self.processedPath, 'Processed')
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        save_path = self.processedPath
+       
+
         # make master index (vestigial)
         master_index = str(int(random.random()*100000000))
 
@@ -222,7 +268,7 @@ class TransformThread(QThread):
 
         ###### BEGIN PROCESSING IMAGE####################################################
         # import image and convert it into an array
-        self.imArray = load_image(pathname.rstrip())
+        self.imArray = load_image(pathname.rstrip(), self.curDetector)
 
         # data_reduction to generate Q-chi, Q
         Q, chi, cake, = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)

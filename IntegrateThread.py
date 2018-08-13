@@ -14,10 +14,12 @@
 #
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-import pyFAI
+import pyFAI, shutil
 from PIL import Image
+from pyqtgraph import *
 import numpy as np
-from scipy import signal
+import scipy.io
+import scipy
 from image_loader import load_image
 import time, glob, os, re, random
 from saveDimRedPack import save_1Dplot, save_1Dcsv, save_texture_plot_csv
@@ -25,13 +27,12 @@ from extDimRedPack import ext_max_ave_intens, ext_peak_num, ext_text_extent, ext
 import traceback
 from reportFn import addFeatsToMaster
 from add_feature_to_master import add_feature_to_master
-
+import monster_integrate as mi
 # The class that defines a thread that runs the integration processing 
 class IntegrateThread(QThread):
-    def __init__(self, windowreference, dataPath, calibPath, processedpath, detectordata, files_to_process, ranges):
+    def __init__(self, windowreference, calibPath, processedpath, detectordata, files_to_process, ranges):
         QThread.__init__(self)
         self.files_to_process = files_to_process
-        self.dataPath = dataPath
         self.calibPath = calibPath
         self.detectorData = detectordata
         self.ranges = ranges
@@ -39,23 +40,35 @@ class IntegrateThread(QThread):
         self.PP = 0.95           
         self.windowreference = windowreference
         self.processedPath = processedpath
+
         if ranges != None:
             self.QRange = (float(ranges[0][0]), float(ranges[0][1]))
             self.ChiRange = (float(ranges[1][0]), float(ranges[1][1]))
-    
+        try:
+            if os.path.isdir(files_to_process[0]):
+                self.dataPath = files_to_process[0]
+            else:   
+                self.dataPath = os.path.dirname(files_to_process[0])
+        except TypeError: # Nonetype error happens when initializing transform thread with Nones
+            pass    
+        
     def setAbortFlag(self, boo):
         self.abort_flag = boo
+        
+    def stop(self):
+        self.terminate()        
     
     # Begins the integration, assuming that all the relevant calibration and data information
     # has been correctly passed into IntegrateThread's __init__
     def beginIntegration(self):
         QApplication.processEvents()
         ##########################################Extension chooser?...
-        if self.files_to_process == "folder":
-            fileList = sorted(glob.glob(os.path.join(self.dataPath.rstrip(), '*.tif')))
+        if os.path.isdir(self.files_to_process[0]):
+            fileList = sorted(glob.glob(os.path.join(self.dataPath.rstrip(), '*.mat')))
             if len(fileList) == 0:
-                self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "No files found in specified source directory!")
-                return
+                self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "No .mat files found in specified source directory!")
+                self.emit(SIGNAL("enableWidgets()"))
+                return  
            
             files = fileList[0:10000000000000000]
         else:
@@ -65,6 +78,13 @@ class IntegrateThread(QThread):
         stage2Time = []
         increment = (1/float(len(files)))*100
         progress = 0
+        self.emit(SIGNAL("resetIntegrate(PyQt_PyObject)"), self.windowreference)
+        # generate a folder to put processed files
+        save_path = self.processedPath
+        if os.path.exists(save_path):
+            shutil.rmtree(save_path)    
+        
+        os.makedirs(save_path)
         for filePath in files:
             filePath = filePath.rstrip()
             QApplication.processEvents()
@@ -102,7 +122,7 @@ class IntegrateThread(QThread):
             stage2Time += [(stage2int - stage1int)]
         
     
-            save_path = os.path.join(os.path.dirname(filePath), 'Processed')
+            save_path = os.path.join(os.path.dirname(filePath), 'Processed_Integrate')
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             with open("thisRun.txt", 'w') as runFile:
                 runFile.write("i_data_source = \"" + str(self.dataPath)+'\"\n')
@@ -131,163 +151,67 @@ class IntegrateThread(QThread):
         '''
         print('\n')
         print('******************************************** Begin image reduction...')
-        # PP: beam polarization, according to beamline setup. 
-        # Contact beamline scientist for this number
-        pixelSize = 79  # detector pixel size, measured in microns
-
-        # pathname was imageFullName
-        folder_path = os.path.dirname(pathname)
-        filename = os.path.basename(pathname)
-        # fileRoot was imageFilename
-        fileRoot, ext = os.path.splitext(filename)
-        index = re.match('.*?([0-9]+).[a-zA-Z]+$',filename).group(1)
-        base_filename = re.match('(.*?)[0-9]+.[a-zA-Z]+$',filename).group(1) # name w/o ind
-
-        # Master CSV path
-        masterPath = os.path.join(folder_path,base_filename + 'master.csv')
-
-        # generate a folder to put processed files
-        save_path = os.path.join(self.processedPath, 'Processed')
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        # make master index (vestigial)
-        master_index = str(int(random.random()*100000000))
-
-        attDict = dict.fromkeys(['scanNo', 'SNR', 'textureSum', 'Imax',
-                                     'Iave', 'I_ratio', 'numPeaks'])
-       
-        ###### BEGIN READING CALIB FILE #################################################
-        # initializing params, transform the calibration parameters from WxDiff to Fit2D
-        d_in_pixel = float(str(self.detectorData[0]))
-        Rotation_angle = float(str(self.detectorData[1]))
-        tilt_angle = float(str(self.detectorData[2]))
-        lamda = float(str(self.detectorData[3]))
-        x0 = float(str(self.detectorData[4]))
-        y0 = float(str(self.detectorData[5]))
-        #d_in_pixel, Rotation_angle, tilt_angle, lamda, x0, y0 = parse_calib(calibPath)
-        Rot = (np.pi * 2 - Rotation_angle) / (2 * np.pi) * 360  # detector rotation
-        tilt = tilt_angle / (2 * np.pi) * 360  # detector tilt  # wavelength
-        d = d_in_pixel * pixelSize * 0.001  # measured in milimeters        
-
+      
         ###### BEGIN PROCESSING IMAGE####################################################
         # import image and convert it into an array
-        self.imArray = load_image(pathname)
+        new_pathname = os.path.splitext(pathname)[0]
+        self.imArray = scipy.io.loadmat(new_pathname)
+        cakeArray = self.imArray['cake']
+        qArray = self.imArray['Q']
+        chiArray = self.imArray['chi']
+        cakeArray[cakeArray == 0] = np.nan
+        chimin = int(self.ChiRange[0])
+        chimax = int(self.ChiRange[1])
+        qmin = int(self.QRange[0])
+        qmax = int(self.QRange[1])
+        #chiindexlist = []
+        #i = 0
+        #for val in chiArray.flatten().tolist():
+            #if val >= chimin and val <= chimax:
+                #chiindexlist.append(i)
+            #i += 1
+        #qindexlist = []
+        #i = 0
+        #for val in qArray.flatten().tolist():
+            #if val >= qmin and val <= qmax:
+                #qindexlist.append(i)
+            #i += 1
+        
 
+        #chiminind = min(chiindexlist)
+        #chimaxind = max(chiindexlist)
+        #qminind = min(qindexlist)
+        #qmaxind = max(qindexlist)
+        #to_int = cakeArray[qminind:qmaxind][chiminind:chimaxind]
+        #integrated_cake = np.nanmean(to_int ,  axis=0)
+        integrated_cake = np.nanmean(cakeArray ,  axis=0)
+        self.windowreference.one_d_graph.clear()
+        
+        self.windowreference.one_d_graph.plot(qArray.flatten(), integrated_cake)
+        self.windowreference.one_d_graph.autoRange()
+        mi.centerButtonClicked(self.windowreference)
+        time.sleep(.2)
+        QApplication.processEvents()
+        p = QPixmap.grabWindow(self.windowreference.one_d_graph.winId())
+        imageFilename = os.path.basename(pathname.rsplit('.', 1)[0])
+        filename = os.path.join(self.processedPath, os.path.splitext(imageFilename)[0]+'_1D.png') 
+        p.save(filename, 'png')                 
         # data_reduction to generate 1D spectra, Q
-        Qlist, IntAve = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
+        #Qlist, IntAve = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
 
 
         ###### SAVE PLOTS ###############################################################
         # save 1D spectra as a *.csv
-        save_1Dcsv(Qlist, IntAve, fileRoot, save_path)
+        #save_1Dcsv(Qlist, IntAve, fileRoot, save_path)
 
-        ###### EXTRACT ATTRIBUTES #######################################################
-        # extract composition information if the information is available
-        # extract the number of peaks in 1D spectra as attribute3 by default
-        newRow3, peaks = ext_peak_num(Qlist, IntAve, index)
-        attDict['numPeaks'] = len(peaks)
-        #attribute3.append(newRow3)
-        #attributes = np.array(attribute3)
 
         # save 1D plot with detected peaks shown in the plot
         if self.QRange:
             titleAddStr = ', Q:' + str(self.QRange) + ', Chi:' + str(self.ChiRange)
         else: 
             titleAddStr = '.' 
-        save_1Dplot(Qlist, IntAve, peaks, fileRoot, save_path, 
-                        titleAdd=titleAddStr)
-
-        if True: 
-            # extract maximum/average intensity from 1D spectra as attribute1
-            newRow1 = ext_max_ave_intens(IntAve, index)
-            attDict['scanNo'], attDict['Imax'], attDict['Iave'], attDict['I_ratio'] = newRow1
-            #attribute1.append(newRow1)
-            #attributes = np.concatenate((attribute1, attributes), axis=1)
-
-        #if True:
-            ## save 1D texture spectra as a plot (*.png) and *.csv
-            #Qlist_texture, texture = save_texture_plot_csv(Q, chi, cake, fileRoot, save_path)
-            ## extract texture square sum from the 1D texture spectra as attribute2
-            #newRow2 = ext_text_extent(Qlist_texture, texture, index)
-            #attDict['textureSum'] = newRow2[1]
-            ##attribute2.append(newRow2)
-            ##attributes = np.concatenate((attribute2, attributes), axis=1)
-
-        if False:
-            # extract neighbor distances as attribute4
-            newRow4 = nearst_neighbor_distance(index, Qlist, IntAve, 
-                                                   folder_path, save_path, base_filename,num_of_smpls_per_row)
-            #attribute4.append(newRow4)
-            #attributes = np.concatenate((attribute4, attributes), axis=1)
-
-        if True:
-            # extract signal-to-noise ratio
-            try:
-                newRow5 = ext_SNR(index, IntAve)
-            except:
-                traceback.print_exc()
-                self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "----------------ERROR: Optimal parameters not found.----------------")
-                self.abort_flag = True
-                return
-            attDict['SNR'] = newRow5[1]
-            #attribute5.append(newRow5)
-            #attributes = np.concatenate((attribute5, attributes), axis=1)
-
-        # add features (floats) to master metadata
-        attDict['scanNo'] = int(index)
-        addFeatsToMaster(attDict, masterPath)            
-        
-        # -*- coding: utf-8 -*-
-        """
-        Created on Mon Jun 13
-        
-        @author: fangren
-        
-        """
-        
-    # Uses pyFAI to integrate the tif file as a one dimensional plot
-    def data_reduction(self, d, Rot, tilt, lamda, x0, y0, pixelsize):
-        """
-        The input is the raw file's name and calibration parameters
-        return Q-chi (2D array) and a spectrum (1D array)
-        """    
-        s1 = int(self.imArray.shape[0])
-        s2 = int(self.imArray.shape[1])
-        self.imArray = signal.medfilt(self.imArray, kernel_size = 5)
-    
-        detector_mask = np.ones((s1,s2))*(self.imArray <= 0)
-        p = pyFAI.AzimuthalIntegrator(wavelength=lamda)
-    
-        # refer to http://pythonhosted.org/pyFAI/api/pyFAI.html for pyFAI parameters
-        p.setFit2D(d,x0,y0,tilt,Rot,pixelsize,pixelsize) 
-    
-        # the output unit for Q is angstrom-1.  Always integrate all in 2D
-        cake,Q,chi = p.integrate2d(self.imArray,1000, 1000,
-                                   #azimuth_range=azRange, radial_range=radRange,
-                                mask = detector_mask, polarization_factor = self.PP)
-    
-
-    
-        # create azimuthal range from chi values found in 2D integrate
-        # modify ranges to fit with detector geometry
-        centerChi = (np.max(chi) + np.min(chi)) / 2
-        if (self.QRange is not None) and (self.ChiRange is not None): 
-            azRange = (centerChi+self.ChiRange[0] ,centerChi + self.ChiRange[1] ) 
-            radRange = tuple([y/10E8 for y in self.QRange])
-            #azRange = tuple([x-Rot for x in self.ChiRange])
-            #radRange = tuple([y/10E8 for y in self.QRange])
-            print(azRange, radRange)
-        else: 
-            azRange, radRange = None, None
-    
-        Qlist, IntAve = p.integrate1d(self.imArray, 1000, 
-                                      azimuth_range=azRange, radial_range=radRange,
-                                mask = detector_mask, polarization_factor = self.PP)
-    
-        # the output unit for Q is angstrom-1
-        Qlist = Qlist * 10e8
-        
-        return Qlist, IntAve
+        #save_1Dplot(Qlist, IntAve, peaks, fileRoot, save_path, 
+                        #titleAdd=titleAddStr)
 
     
     # Defines what should be done when the user aborts the current integration.

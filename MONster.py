@@ -28,7 +28,7 @@ import monster_queueloader as mq
 import Properties
 #=====================
 import sys
-import os, traceback
+import os, traceback, ast
 import getpass
 import datetime
 from ClickableLineEdit import *
@@ -38,6 +38,119 @@ from StitchThread import *
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+# This class defines the Detector window in the menu.
+class DetectorEditor(QWidget):
+    def __init__(self, windowreference):
+        QWidget.__init__(self)
+        self.windowreference = windowreference
+        self.listwidget = QListWidget()
+        self.listwidget.setMaximumWidth(350)
+        self.listwidget.setMinimumWidth(250)
+    
+        detectors = Properties.detectors 
+        self.detectorlist = []
+        for item in detectors:
+            string = item.split(', ')
+            name = string[0]
+            width = int(string[1][7:].rstrip())
+            height = int(string[2][7:].rstrip())
+            detector = Detector(name, width, height)
+            self.detectorlist.append(detector)
+            self.windowreference.detectorList.append(detector)
+            self.listwidget.addItem(str(detector))
+            self.windowreference.detector_combo.addItem(str(detector))
+            
+        
+
+        self.removeButton = QPushButton("Remove")
+        self.nameLabel = QLabel("Name")
+        self.name = QLineEdit()
+        self.widthLabel = QLabel("Width")
+        self.width = QLineEdit()
+        self.heightLabel = QLabel("Height")
+        self.height = QLineEdit()
+        self.addButton = QPushButton("Add to List!")
+        self.closeButton = QPushButton("Close")
+
+        hbox = QHBoxLayout()
+        v1 = QVBoxLayout()
+        v2 = QVBoxLayout()
+        v2_h = QHBoxLayout()
+
+        v1.addWidget(self.listwidget)
+        v1.addWidget(self.removeButton)
+
+        v2.addWidget(self.nameLabel)
+        v2.addWidget(self.name)
+        vx = QVBoxLayout()
+        vy = QVBoxLayout()
+        vx.addWidget(self.widthLabel)
+        vx.addWidget(self.width)
+        vy.addWidget(self.heightLabel)
+        vy.addWidget(self.height)
+        v2_h.addLayout(vx)
+        v2_h.addLayout(vy)
+        v2.addLayout(v2_h)
+        v2.addWidget(self.addButton)
+        h = QHBoxLayout()
+        h.addStretch()
+        h.addWidget(self.closeButton)
+        v2.addLayout(h)
+        hbox.addLayout(v1)
+        hbox.addLayout(v2)
+        self.setLayout(hbox)
+    
+        self.setWindowTitle("Add or edit a detector!")
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())    
+
+
+
+        self.updateConnections()        
+
+     
+
+    def updateConnections(self):
+        self.closeButton.clicked.connect(lambda: self.close())
+        self.addButton.clicked.connect(self.addDetector)
+        self.name.returnPressed.connect(self.addDetector)
+        self.width.returnPressed.connect(self.addDetector)
+        self.height.returnPressed.connect(self.addDetector)
+
+    def addDetector(self):
+        if self.name.text().isEmpty() or self.width.text().isEmpty() or self.height.text().isEmpty():
+            displayError(self, "Please make sure you fill out all the relevant information!")
+            return
+        try:
+            name = str(self.name.text())
+            width = int(str(self.width.text()))
+            height = int(str(self.height.text()))
+        except:
+            displayError(self, "Could not add your values.")
+            return
+        detector = Detector(name, width, height)
+        self.detectorlist.append(detector)
+        properties = []
+        inFile = open("Properties.py", 'r')
+        for line in inFile:
+            properties.append(line)
+        inFile.close()
+        outFile = open("Properties.py", 'w')
+        detectors = properties[-1].split("= ")[1]
+        detectors = ast.literal_eval(detectors)
+        detectors.append(str(detector))
+        properties[-1] = detectors
+        for prop in properties:
+            if prop == properties[-1]:
+                s = "detectors = "
+                prop = s + str(prop)
+            outFile.write(str(prop))
+        outFile.close()  
+        self.listwidget.addItem(str(detector))
+        self.windowreference.detector_combo.addItem(str(detector))
         
 # This class is the class that governs all things that occur in the GUI window.
 class MONster(QTabWidget):
@@ -45,12 +158,9 @@ class MONster(QTabWidget):
         QTabWidget.__init__(self)
         self.macroQueue = [] # list of macros for the queue tab
         self.fileProcessedCount = 0
-        self.lineEditStyleSheet =" QLineEdit { border-radius: 4px;  color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); border-style:outset; border-width:4px;  border-radius: 4px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } "
+        self.lineEditStyleSheet ="QLineEdit { border-radius: 4px;  color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); border-style:outset; border-width:4px;  border-radius: 4px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } "
         self.textStyleSheet = "QLabel {background-color : rgb(29, 30, 50); color: white; }"
         self.current_user = getpass.getuser()
-        self.transformThread = TransformThread(self, None, None, None, None, None)  # initialize the transform thread
-        self.integrateThread = IntegrateThread(self, None, None, None, None, None, None) # initialize the integrate thread
-        self.stitchThread = StitchThread(self, None, None, None, None) # initialize the stitch thread
         screenShape = QDesktopWidget().screenGeometry()
         self.imageWidth = screenShape.height()/2.5
         mt.generateTransformWidgets(self) 
@@ -62,7 +172,11 @@ class MONster(QTabWidget):
         self.integrateTab = QWidget()
         self.queueTab = QWidget()
         self.editor = mq.MacroEditor(self) # reference to the queue macro editor
+        self.detectorWindow = DetectorEditor(self)
         self.processDone = True # To check if current process in the macro queue is over
+        self.transformThread = TransformThread(self, None, None, None, None)  # initialize the transform thread
+        self.integrateThread = IntegrateThread(self, None, None, None, None, None) # initialize the integrate thread
+        self.stitchThread = StitchThread(self, None, None) # initialize the stitch thread        
         self.updateUi()
         
     # Generates layouts and sets connections between buttons and functions
@@ -89,27 +203,27 @@ class MONster(QTabWidget):
         
         self.processed_location_folder_button.clicked.connect(self.setProcessedLocation)
         
-        self.start_button.clicked.connect(self.transformThreadStart)
+        self.start_button.clicked.connect(lambda: mt.transformThreadStart(self))
         
-        self.q_min.returnPressed.connect(self.transformThreadStart)
+        self.q_min.returnPressed.connect(lambda: mt.transformThreadStart(self))
         
         self.q_min.clicked.connect(lambda: self.q_min.selectAll())        
         
-        self.q_max.returnPressed.connect(self.transformThreadStart)
+        self.q_max.returnPressed.connect(lambda: mt.transformThreadStart(self))
         
         self.q_max.clicked.connect(lambda: self.q_max.selectAll())
         
-        self.chi_min.returnPressed.connect(self.transformThreadStart)
+        self.chi_min.returnPressed.connect(lambda: mt.transformThreadStart(self))
         
         self.chi_min.clicked.connect(lambda: self.chi_min.selectAll())
         
-        self.chi_max.returnPressed.connect(self.transformThreadStart)
+        self.chi_max.returnPressed.connect(lambda: mt.transformThreadStart(self))
         
         self.chi_max.clicked.connect(lambda: self.chi_max.selectAll())
         
-        self.data_source.returnPressed.connect(self.transformThreadStart)
+        self.data_source.returnPressed.connect(lambda: mt.transformThreadStart(self))
                 
-        self.calib_source.returnPressed.connect(self.transformThreadStart)
+        self.calib_source.returnPressed.connect(lambda: mt.transformThreadStart(self))
                 
         self.saveCustomCalib.clicked.connect(self.saveCalibAction)
         
@@ -148,12 +262,9 @@ class MONster(QTabWidget):
         self.images_select_files_button.clicked.connect(lambda: ms.stitchImageSelect(self))
         
         self.stitch_saveLocation_button.clicked.connect(lambda: ms.setStitchSaveLocation(self))
-        # random name, don't read into it
-        def martyr():
-            if self.data_source_check.isChecked():
-                self.data_label.setText("Current data source:")
-                self.files_to_process = "folder"        
-        self.data_source_check.stateChanged.connect(martyr)
+        
+        self.centerButton.clicked.connect(lambda: mi.centerButtonClicked(self))
+      
         ###########################################
         ###########################
         #Restore default graphs and data from the previous run upon starting MONster
@@ -181,7 +292,9 @@ class MONster(QTabWidget):
         
         try:
             if os.path.exists(Properties.t_data_source):
-                self.data_source.setText(Properties.t_data_source)
+                dataPath = Properties.t_data_source
+                self.data_source.setText(dataPath)
+                self.files_to_process = [dataPath]                
             if os.path.exists(Properties.s_data_source):
                 self.images_select.setText(Properties.s_data_source)                
             if os.path.exists(Properties.i_data_source):
@@ -192,10 +305,17 @@ class MONster(QTabWidget):
                 self.int_calib_source.setText(Properties.i_calib_source)
             if os.path.exists(Properties.t_processed_loc):
                 self.processed_location.setText(Properties.t_processed_loc)
+            else:
+                self.processed_location.setText(str(self.data_source.text()) + "/Processed_Transform")
             if os.path.exists(Properties.s_processed_loc):
                 self.stitch_saveLocation.setText(Properties.s_processed_loc)
+            else:
+                self.stitch_saveLocation.setText(str(self.images_select.text())  + "/Processed_Stitch")                
             if os.path.exists(Properties.i_processed_loc):
                 self.int_processed_location.setText(Properties.i_processed_loc)
+            else:
+                self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")                
+                
             self.setRawImage(Properties.two_d_image)
             ms.setStitchImage(self, Properties.stitch_image)
             mi.set1DImage(self, Properties.one_d_image)
@@ -203,12 +323,18 @@ class MONster(QTabWidget):
             self.q_max.setText(Properties.qmax)
             self.chi_min.setText(Properties.chimin)
             self.chi_max.setText(Properties.chimax)
-            self.first_index.setText(Properties.findex)
-            self.last_index.setText(Properties.lindex)
+
         except:
+            traceback.print_exc()
             self.addToConsole("Something's not right with the previous run information.")
             self.setRawImage('images/SLAC_LogoSD.png')
             mi.set1DImage(self, 'images/SLAC_LogoSD.png')       
+            if str(self.processed_location.text()) == "":
+                self.processed_location.setText(str(self.data_source.text()) + "/Processed_Transform")
+            if str(self.int_processed_location.text()) == "":
+                self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")
+            if str(self.stitch_saveLocation.text()) == "":
+                self.stitch_saveLocation.setText(str(self.images_select.text())  + "/Processed_Stitch")
         
         self.loadCalibration()
         self.loadIntegrateCalibration()
@@ -239,25 +365,35 @@ class MONster(QTabWidget):
             self.editor.wavelength.setText(self.wavelength.text())
             self.editor.calib_source.setText(self.calib_source.text())
             self.editor.processed_location.setText(self.processed_location.text())
-            self.editor.data_source.setText(self.data_source.text())            
+            self.editor.data_source.setText(self.data_source.text())       
+            self.editor.int_detectordistance.setText(self.int_detectordistance.text())
+            self.editor.int_detect_tilt_alpha.setText(self.int_detect_tilt_alpha.text())
+            self.editor.int_detect_tilt_delta.setText(self.int_detect_tilt_delta.text())
+            self.editor.int_dcenterx.setText(self.int_dcenterx.text())
+            self.editor.int_dcentery.setText(self.int_dcentery.text())
+            self.editor.int_wavelength.setText(self.int_wavelength.text())
+            self.editor.int_calib_source.setText(self.int_calib_source.text())
+            self.editor.int_processed_location.setText(self.int_processed_location.text())
+            self.editor.int_data_source.setText(self.int_data_source.text())                   
+            
             if self.data_source_check.isChecked():
                 self.editor.data_source_check.setChecked(True)
             else:
                 self.editor.data_source_check.setChecked(False)
-        elif index == 2:
-            self.int_detectordistance.setText(self.detectordistance.text())
-            self.int_detect_tilt_alpha.setText(self.detect_tilt_alpha.text())
-            self.int_detect_tilt_delta.setText(self.detect_tilt_delta.text())
-            self.int_dcenterx.setText(self.dcenterx.text())
-            self.int_dcentery.setText(self.dcentery.text())
-            self.int_wavelength.setText(self.wavelength.text())
-            self.int_calib_source.setText(self.calib_source.text())
-            self.int_processed_location.setText(self.processed_location.text())
-            self.int_data_source.setText(self.data_source.text())            
-            if self.data_source_check.isChecked():
-                self.int_data_source_check.setChecked(True)
-            else:
-                self.int_data_source_check.setChecked(False)            
+        #elif index == 2:
+            #self.int_detectordistance.setText(self.detectordistance.text())
+            #self.int_detect_tilt_alpha.setText(self.detect_tilt_alpha.text())
+            #self.int_detect_tilt_delta.setText(self.detect_tilt_delta.text())
+            #self.int_dcenterx.setText(self.dcenterx.text())
+            #self.int_dcentery.setText(self.dcentery.text())
+            #self.int_wavelength.setText(self.wavelength.text())
+            #self.int_calib_source.setText(self.calib_source.text())
+            #self.int_processed_location.setText(self.processed_location.text())
+            #self.int_data_source.setText(self.data_source.text())            
+            #if self.data_source_check.isChecked():
+                #self.int_data_source_check.setChecked(True)
+            #else:
+                #self.int_data_source_check.setChecked(False)            
         
     # disables all widgets except abort
     def disableWidgets(self):
@@ -278,61 +414,7 @@ class MONster(QTabWidget):
         for box in self.findChildren(QCheckBox):
             box.setEnabled(True)
         
-        
-    # Begins the transform thread
-    def transformThreadStart(self):
-        # Check if the user has correctly selected either a folder or a group of files
-        if not self.data_source_check.isChecked() and self.files_to_process == "folder":
-            self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
-            return
-            
-        self.disableWidgets()
-        QApplication.processEvents()
-        self.console.clear()
-        self.addToConsole('********************************************************')
-        self.addToConsole('********** Beginning Transform Processing... ***********')
-        self.addToConsole('********************************************************')
-        QApplication.processEvents()
-        # grab monitor folder
-        #root = Tkinter.Tk()
-        #root.withdraw()
-    
-        
-        calibPath = str(self.calib_source.text())
-        dataPath = str(self.data_source.text())
-        # Check if entered calibration information is correctly entered
-        if (calibPath is '' and str(self.detectordistance.text()) == '' and str(self.dcenterx.text()) == '' and str(self.dcentery.text()) == '' and str(self.detect_tilt_alpha.text()) == '' and str(self.detect_tilt_delta.text()) == '' and str(self.wavelength.text()) == '') or dataPath is '':
-                
-            self.addToConsole("Please make sure you have entered valid data or calibration source information.")
-            return
-
-        bkgdPath = os.path.expanduser('~/monHiTp/testBkgdImg/bg/a40_th2p0_t45_center_bg_0001.tif')
-        #configPath = tkFileDialog.askopenfilename(title='Select Config File')
-        if bkgdPath is '':
-            self.win.addToConsole('No bkgd file supplied, aborting...')
-            return
-            
-        self.addToConsole('Calibration File: ' + calibPath)
-        self.addToConsole('Folder to process: ' + dataPath)
-        self.addToConsole('')        
-     
-         # detectorData is just the current calibration attributes that the user has loaded/tweaked
-        detectorData = (str(self.detectordistance.text()), str(self.detect_tilt_alpha.text()), str(self.detect_tilt_delta.text()), str(self.wavelength.text()), str(self.dcenterx.text()), str(self.dcentery.text()))
-        # Initialize transform thread
-        self.transformThread = TransformThread(self, str(self.processed_location.text()), calibPath, dataPath, detectorData, self.files_to_process)
-        self.transformThread.setAbortFlag(False)
-        # make sure that if the abort button is clicked, it is aborting the current running transform thread, so this needs to be run for every new transform thread
-        self.abort.clicked.connect(self.transformThread.abortClicked)
-        self.int_abort.clicked.connect(self.transformThread.abortClicked)
-        
-        # these connections are the only way the thread can communicate with the MONster
-        self.connect(self.transformThread, SIGNAL("addToConsole(PyQt_PyObject)"), self.addToConsole)
-        self.connect(self.transformThread, SIGNAL("setRawImage(PyQt_PyObject)"), self.setRawImage)
-        self.connect(self.transformThread, SIGNAL("enableWidgets()"), self.enableWidgets)
-        self.connect(self.transformThread, SIGNAL("bar(int, PyQt_PyObject)"), self.setRadialBar)
-        self.connect(self.transformThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.done)
-        self.connect(self.transformThread, SIGNAL("enable()"), self.enableWidgets)
-        self.transformThread.start()
+   
         
     
     # What should be done after a stitch thread is finished
@@ -346,7 +428,11 @@ class MONster(QTabWidget):
         finishedMessage += ('-----Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avgTime, maxTime))
         finishedMessage += ('-----Total Time Elapsed {:4f}s\n'.format(np.sum(loopTime)))
         finishedMessage += ('====================================================\n')
-        finishedMessage += ('====================================================')        
+        finishedMessage += ('====================================================')    
+        self.console.moveCursor(QTextCursor.End)
+        self.miconsole.moveCursor(QTextCursor.End)
+        self.qconsole.moveCursor(QTextCursor.End)
+        self.stitch_console.moveCursor(QTextCursor.End)
         #QMessageBox.information(self, "Done!", finishedMessage)
         self.addToConsole(finishedMessage)
         QApplication.processEvents()            
@@ -375,6 +461,10 @@ class MONster(QTabWidget):
         finishedMessage += ('====================================================')        
         #QMessageBox.information(self, "Done!", finishedMessage)
         self.addToConsole(finishedMessage)
+        self.console.moveCursor(QTextCursor.End)
+        self.miconsole.moveCursor(QTextCursor.End)
+        self.qconsole.moveCursor(QTextCursor.End)
+        self.stitch_console.moveCursor(QTextCursor.End)        
         QApplication.processEvents()            
         self.enableWidgets()
         self.transformThread.quit()
@@ -384,10 +474,8 @@ class MONster(QTabWidget):
         #if self.transformThread.isRunning():
         #self.transformThread.quit()
         self.stitchThread.stop()
-        if self.transformThread.isRunning():
-            self.transformThread.stop() 
-        if self.integrateThread.isRunning():
-            self.integrateThread.stop() 
+        self.transformThread.stop() 
+        self.integrateThread.stop() 
         self.processDone = True
         
     # Adds the passed in message to all consoles
@@ -396,6 +484,10 @@ class MONster(QTabWidget):
         self.miconsole.append(message)
         self.qconsole.append(message)
         self.stitch_console.append(message)
+        self.console.moveCursor(QTextCursor.End)
+        self.miconsole.moveCursor(QTextCursor.End)
+        self.qconsole.moveCursor(QTextCursor.End)
+        self.stitch_console.moveCursor(QTextCursor.End)
         QApplication.processEvents()
    
     # Loads transform calibration information based on the filename the user selects
@@ -436,12 +528,13 @@ class MONster(QTabWidget):
                 if folderpath != '':
                     self.data_source.setText(folderpath)
                     self.data_label.setText("Current data source:")
-                    self.processed_location.setText(self.data_source.text())
-                    self.files_to_process = "folder"
+                    self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                    self.files_to_process = [folderpath]
             except:
                 self.addToConsole("Something went wrong when trying to open your directory.")
         else:
             try:
+                
                 filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
                 filenames = [str(filename) for  filename in filenames]
                 if len(filenames) < 2:
@@ -450,11 +543,11 @@ class MONster(QTabWidget):
                     self.data_label.setText("Current data source: (multiple files)")
                 print(filenames)
                 self.data_source.setText(os.path.dirname(filenames[0]))
-                self.processed_location.setText(self.data_source.text())
+                self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
                 self.files_to_process = filenames
             except:
                 #traceback.print_exc()
-                self.addToConsole("Something went wrong when trying to select your files.")
+                self.addToConsole("Did not select a data source.")
     # Retrieves and loads the calibration information that the user selects
     def getCalibSourcePath(self):
         path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
@@ -487,6 +580,8 @@ class MONster(QTabWidget):
     def setRawImage(self, filename):
         try:
             pixmap = QPixmap(filename)
+            if filename == "":
+                pixmap = QPixmap("images/SLAC_LogoSD.png")
             self.raw_image.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))        
         except:
             self.addToConsole("Could not load Qchi image.")
@@ -522,7 +617,33 @@ class MONster(QTabWidget):
             self.stitchbar.setValue(val)
             
         self.queue_bar_files.setValue(val)
-   
+    # tuple -> None
+    # Accepts the event of the mouse movement and updates the moving coordinate label accordingly (for 1D plots)
+    def mouseMoved(self, evt):
+        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        global  currentChannel
+        if self.one_d_graph.sceneBoundingRect().contains(pos):
+            mousePoint = self.vb.mapSceneToView(pos)
+            yPoint = "{:.4e}".format(mousePoint.y())
+            #self.graphcoordinates.setText("<span style='font-size: 11pt'>%s = %0.4f, <span style='color: red'>%s = %s</span>" % (str(self.currentMotor), mousePoint.x(), str(currentChannel), yPoint))
+            self.vLine.setPos(mousePoint.x())
+            self.hLine.setPos(mousePoint.y())  
+            #global coordinates 
+            #coordinates = (round(mousePoint.x(), 4), round(mousePoint.y(), 4))   
+        
+    # None -> None
+    # Updates the current 1D graph region        
+    def updateRegion(self, window, viewRange):
+        rgn = viewRange[0]
+        self.region.setRegion(rgn)    
+    
+    # None -> None
+    # Updates the current 1D graph ranges
+    def update(self):
+        self.region.setZValue(10)
+        minX, maxX = self.region.getRegion()
+        self.one_d_graph.setXRange(minX, maxX, padding=0)   
+    
 # Takes a message as an argument and displays it to the screen as a message box     
 def displayError(self, message):
     message = QLabel(message)
@@ -565,31 +686,63 @@ class Menu(QMainWindow):
     def updateUi(self):
         bar = self.menuBar()
         file = bar.addMenu('File')
+        edit = bar.addMenu("Edit")
         home_action = QAction('Home', self)
         
         save_action = QAction('Save', self)
         save_action.setShortcut('Ctrl+S')
-        saveplot_action = QAction('Save Plot Data', self)
-        saveplot_action.setShortcut('Ctrl+Alt+S')
+        #saveplot_action = QAction('Save Plot Data', self)
+        #saveplot_action.setShortcut('Ctrl+Alt+S')
+        clear_prop = QAction("Clear previous run information", self)
+        
         quit_action = QAction('Quit', self)
         quit_action.setShortcut('Ctrl+Q')
+
+        detectors = QAction("Add or remove detectors", self)
+        
         
         file.addAction(home_action)
         file.addAction(save_action)
-        file.addAction(saveplot_action)
+        edit.addAction(clear_prop)
+        edit.addAction(detectors)
+        #file.addAction(saveplot_action)
         file.addAction(quit_action)
         
         
         quit_action.triggered.connect(lambda: qApp.quit())
+        clear_prop.triggered.connect(self.clearProperties)
+        detectors.triggered.connect(lambda: self.form_widget.detectorWindow.show())
         self.setWindowTitle('MONster')
         
         self.setStyleSheet("background-color: rgb(29, 30,51);")
         
         self.show()
         self.raise_()
-        self.showMaximized()
+        self.setFixedSize(self.minimumSizeHint())
         
-        
+    def clearProperties(self):
+        detectors = []
+        with open("Properties.py", 'r') as prop:
+            for i in range(14):
+                prop.readline()
+            detectors = ast.literal_eval(prop.readline().split("= ")[1])
+        with open("Properties.py", 'w') as prop:
+            prop.write("t_data_source = \"\"\n")
+            prop.write("s_data_source = \"\"\n")
+            prop.write("i_data_source = \"\"\n")
+            prop.write("t_calib_source = \"\"\n")
+            prop.write("i_calib_source = \"\"\n")
+            prop.write("t_processed_loc = \"\"\n")
+            prop.write("s_processed_loc = \"\"\n")
+            prop.write("i_processed_loc = \"\"\n")
+            prop.write("two_d_image = \"\"\n")
+            prop.write("stitch_image = \"\"\n")
+            prop.write("one_d_image = \"\"\n")
+            prop.write("qmin = \"\"\n")
+            prop.write("qmax = \"\"\n")
+            prop.write("chimin = \"\"\n")
+            prop.write("chimax = \"\"\n")
+            prop.write("detectors = " + str(detectors))
   
         
         

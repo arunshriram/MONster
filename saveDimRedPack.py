@@ -32,7 +32,7 @@ def save_Qchi(Q, chi, cake, imageFilename, save_path):
              scipy.stats.scoreatpercentile(np.log(cake[inds]), 95))
     plt.colorbar()
     name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
-    plt.savefig(name)
+    plt.savefig(name, dpi=300)
     plt.close()
 
 def save_1Dcsv(Qlist, IntAve, imageFilename, save_path):

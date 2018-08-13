@@ -18,8 +18,6 @@ def generateStitchWidgets(self):
     pixmap = QPixmap('images/SLAC_LogoSD.png')
     self.stitchImage.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))
     self.stitchImage.setStyleSheet('QLabel { border-style:outset; border-width:10px;  border-radius: 10px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } ')
-    self.images_select_label = QLabel('Select the image folder that contains you wish to stitch:')
-    self.images_select_label.setStyleSheet('QLabel {color: white;}')
     self.images_select = ClickableLineEdit()
     self.images_select.setFixedWidth(580)
     self.images_select.setStyleSheet(self.lineEditStyleSheet)
@@ -42,16 +40,7 @@ def generateStitchWidgets(self):
     self.stitch_saveLocation_button.setFixedSize(25 ,25)
     self.stitch_saveLocation_button.setIconSize(QSize(25, 25))
     self.stitch_saveLocation_button.setStyleSheet("border: none;")
-    self.first_index_label = QLabel('First scan index:')
-    self.first_index_label.setStyleSheet('QLabel {color: white;}')
-    self.first_index = ClickableLineEdit('1')
-    self.first_index.setMaximumWidth(30)
-    self.first_index.setStyleSheet(self.lineEditStyleSheet)
-    self.last_index_label = QLabel('Last scan index:')
-    self.last_index_label.setStyleSheet('QLabel {color: white;}')
-    self.last_index = ClickableLineEdit('9')
-    self.last_index.setMaximumWidth(30)
-    self.last_index.setStyleSheet(self.lineEditStyleSheet)
+
     self.stitch_start_button = QPushButton('Begin Stitching!')
     self.stitch_start_button.setStyleSheet('background-color: rgb(80, 230, 133);')
     self.stitch_start_button.setFixedSize(160, 30)
@@ -74,10 +63,13 @@ def generateStitchWidgets(self):
     self.stitch_console = QTextBrowser()
     self.stitch_console.setMinimumHeight(150)
     self.stitch_console.setMaximumHeight(300)
-    
+    self.stitch_console.moveCursor(QTextCursor.End)
+    self.stitch_data_label = QLabel("Current data folder:")
+    self.stitch_data_label.setStyleSheet("QLabel {color: white;}")
     self.stitch_console.setFont(QFont('Avenir', 14))
     self.stitch_console.setStyleSheet('margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);')
-
+    
+    self.stitch_files_to_process = None
 
 def generateStitchLayout(self):
     v_box = QVBoxLayout()
@@ -88,28 +80,13 @@ def generateStitchLayout(self):
     imagebox.addWidget(self.stitchImage)
     imagebox.addStretch()    
     v_box.addLayout(imagebox)
-    indicesRow = QHBoxLayout()
     fileSelect = QHBoxLayout()
-    findex = QHBoxLayout()
-    findex.addWidget(self.first_index_label)
-    findex.addWidget(self.first_index)
-    findex.addStretch()
-    lindex = QHBoxLayout()
-    lindex.addWidget(self.last_index_label)
-    lindex.addWidget(self.last_index)
-    lindex.addStretch()
-    v = QVBoxLayout()
-    v.addLayout(findex)
-    v.addLayout(lindex)
-    v1 = QVBoxLayout()
-    v1.addWidget(self.images_select_label)
+    v_box.addWidget(self.stitch_data_label)
     fileSelect.addWidget(self.images_select)
     fileSelect.addWidget(self.images_select_files_button)
-    v1.addLayout(fileSelect)
-    v1.addWidget(self.saveLabel)
-    indicesRow.addLayout(v1)
-    indicesRow.addLayout(v)
-    v_box.addLayout(indicesRow)
+    fileSelect.addStretch()
+    v_box.addLayout(fileSelect)
+    v_box.addWidget(self.saveLabel)
     fileSave = QHBoxLayout()
     fileSave.addWidget(self.stitch_saveLocation)
     fileSave.addWidget(self.stitch_saveLocation_button)
@@ -125,30 +102,41 @@ def generateStitchLayout(self):
 
 
 def stitchImageSelect(self):
-    folder = QFileDialog.getExistingDirectory(directory=os.getcwd())
-    print folder
+    try:
+        folderpath = str(QFileDialog.getExistingDirectory(directory=os.getcwd()))
+        if folderpath != '':
+            self.images_select.setText(folderpath)
+            self.stitch_saveLocation.setText(folderpath + "/Processed_Stitch")
+            self.stitch_files_to_process = folderpath
+    except:
+        self.addToConsole("Something went wrong when trying to open your directory.")
+        return
 
 
 def beginStitch(self):
     self.disableWidgets()
+    self.stitch_console.moveCursor(QTextCursor.End)
     QApplication.processEvents()
-    self.console.clear()
+    # self.console.clear()
+
     self.addToConsole('****************************************************')
     self.addToConsole('********** Beginning Stitch Processing... ***********')
     self.addToConsole('****************************************************')
     QApplication.processEvents()
     
-    if '.' in str(self.first_index.text()) or '.' in str(self.last_index.text()):
-        self.addToConsole("Converting indices to integers %s and %s." % (int(str(self.first_index.text())), int(str(self.last_index.text()))))
     
-    findex = int(str(self.first_index.text()))
-    lindex = int(str(self.last_index.text()))
-    
-    if not os.path.exists(str(self.stitch_saveLocation.text())):
+    if not os.path.exists(str(self.images_select.text())):
+        self.addToConsole("Please select a data source!")
+        self.enableWidgets()
+        return
+    else:
+        self.stitch_files_to_process = str(self.images_select.text())
+    if  str(self.stitch_saveLocation.text()) == "":
         self.addToConsole("Make sure you select a location to save files!")
+        self.enableWidgets()        
         return
 
-    self.stitchThread = StitchThread(self, None, str(self.stitch_saveLocation.text()), findex, lindex)
+    self.stitchThread = StitchThread(self, self.stitch_files_to_process, str(self.stitch_saveLocation.text()))
     self.stitchThread.setAbortFlag(False)
     # make sure that if the abort button is clicked, it is aborting the current running stitch thread, so this needs to be run for every new stitch thread
     self.stitchThread.setAbortFlag(False)
@@ -185,7 +173,9 @@ def stitchDone(self, loopTime):
 # Adds the current stitched image to the stitch page.
 def setStitchImage(self, filename):
     try:
-        pixmap = QPixmap(filename)        
+        pixmap = QPixmap(filename)   
+        if filename == "":
+            pixmap = QPixmap("images/SLAC_LogoSD.png")
         self.stitchImage.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
         QApplication.processEvents()
     except:

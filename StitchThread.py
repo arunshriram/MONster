@@ -15,7 +15,7 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import numpy as np
-import os, scipy, math, time
+import os, scipy, math, time, glob, shutil
 import scipy.io
 import matplotlib 
 matplotlib.use('Agg')
@@ -28,13 +28,12 @@ cancelclicked = False
 # based on the tif and raw files the user supplies.
 class StitchThread(QThread):
 
-    def __init__(self, windowreference, dataPath, savePath, firstIndex, lastIndex):
+    def __init__(self, windowreference, dataPath, savePath):
         QThread.__init__(self)
         self.windowreference = windowreference
         self.dataPath = dataPath
         self.savePath = savePath
-        self.firstIndex = firstIndex
-        self.lastIndex = lastIndex
+
     
     def setAbortFlag(self, boo):
         self.abort_flag = boo
@@ -50,19 +49,7 @@ class StitchThread(QThread):
     
     def setSavePath(self, savePath):
         self.savePath = savePath
-        
-    def getFirstIndex(self):
-        return self.firstIndex
     
-    def setFirstIndex(self, firstIndex):
-        self.firstIndex = firstIndex      
-        
-    def getLastIndex(self):
-        return self.lastIndex
-    
-    def setLastIndex(self, lastIndex):
-        self.lastIndex = lastIndex
-        
     def stop(self):
         self.terminate()
         
@@ -85,13 +72,10 @@ class StitchThread(QThread):
     # has been correctly passed into StitchThread's __init__
     def beginStitch(self):
         loopTime = []
-        basename = '/Users/arunshriram/Documents/SLAC Internship/MONster/stitch_7-2_samples/Pilatus/Processed/b_mehta_IR66BE_th0p2_scan'
-        midname = '_'
-        endname = '_Qchi.mat'
-        imgname = 'glass_zalignment_'
-        firstind = self.firstIndex
-        lastind = self.lastIndex
-        increment = (1/(float(lastind) + 1))*100
+        fileList = sorted(glob.glob(os.path.join(self.dataPath, '*.mat')))
+        
+        numFiles = len(fileList)
+        increment = (1/(float(numFiles) + 1))*100
         progress = 0
         firstphi = 0
         numphi = 1
@@ -108,18 +92,19 @@ class StitchThread(QThread):
             else:
                 phis[i] = ['0', str(phival)]
     
-        firstfile = basename + str(firstind) + midname + phis[0][0] + phis[0][1] + endname
+        firstfile = fileList[0]
         try:
             data = scipy.io.loadmat(firstfile)
         except:
             self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Error: Could not load the first scan file! Try checking your scan indices.")
+
             return
         Q1 = data['Q']
         chi1 = data['chi']
         minq = np.ndarray.min(Q1)
         minchi = np.ndarray.min(chi1)
         maxchi = np.ndarray.max(chi1)
-        lastfile = basename + str(lastind) + midname + phis[0][0] + phis[0][1] + endname
+        lastfile = fileList[numFiles - 1]
         data2 = scipy.io.loadmat(lastfile)
         Q2 = data2['Q']
         maxq = np.ndarray.max(Q2)
@@ -136,12 +121,18 @@ class StitchThread(QThread):
         Qchi0_allphi = np.zeros((lchi0int, lq0int))
         Qchi0log_allphi = np.zeros((lchi0int, lq0int))
         self.emit(SIGNAL("resetStitch(PyQt_PyObject)"), self.windowreference)
+        save_path = self.savePath
+        if os.path.exists(save_path):
+            shutil.rmtree(save_path)    
+        
+        os.makedirs(save_path)
+          
         for p in range(numphi):
             Qchi0raw = np.zeros((lchi0int, lq0int))
             Qchi0 = np.zeros((lchi0int, lq0int))
             count = np.zeros((lchi0int, lq0int))
             broken = False
-            for x in range(firstind, lastind + 1):
+            for x in range(numFiles):
                 if self.abort_flag:
                     writeStitchProperties()
                     self.emit(SIGNAL("enableWidgets()"))                
@@ -150,7 +141,7 @@ class StitchThread(QThread):
                     writeStitchProperties()
                     self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject)"), self.windowreference,  loopTime)                    
                     break                       
-                fullname = basename + str(x) + midname + phis[p][0] + phis[p][1] + endname
+                fullname = fileList[x]
                 start = time.time()
                 self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), '{0}'.format(fullname))
                 self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), os.path.basename(fullname) + ' detected, processing.')
@@ -218,11 +209,12 @@ class StitchThread(QThread):
                 with open("thisRun.txt", 'w') as runFile:
                     runFile.write("s_data_source = \"" + str(self.dataPath) + "\"\n")
                     runFile.write("s_processed_loc = \"" + str(self.savePath) + "\"\n")
-                    imageFilename = os.path.basename(basename)
-                    name = os.path.join(str(self.savePath), os.path.splitext(imageFilename)[0]+'_gamma')
-                    runFile.write("stitch_image = \"" + name + "\"\n")
-                    runFile.write("findex = \"" + str(firstind) + "\"\n")
-                    runFile.write("lindex = \"" + str(lastind) + "\"\n")
+                    imageFilename = os.path.basename(fullname)
+                    i = imageFilename.find("scan")
+                    imageFilename = imageFilename[:i-1]                    
+                    name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
+                    runFile.write("stitch_image = \"" + name + ".png\"\n")
+
                     
                 progress += increment
                 self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 2, progress)
@@ -258,7 +250,7 @@ class StitchThread(QThread):
                         
     
         Qchi0_allphi = np.flipud(Qchi0_allphi)
-        qname = self.save_Qchi(Q0, chi0, Qchi0_allphi, os.path.basename(basename), self.savePath)
+        qname = self.save_Qchi(Q0, chi0, Qchi0_allphi, os.path.basename(fullname), save_path)
         progress += increment
         self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 2, progress)        
         writeStitchProperties()
@@ -277,16 +269,21 @@ class StitchThread(QThread):
         fig = plt.figure(1)
         ax = fig.add_subplot(1, 1, 1)
         plt.title('Q-chi polarization corrected_log scale')
-        plt.pcolormesh(Q, chi, np.log(cake), cmap = 'jet')
+        plt.pcolormesh(Q, chi, np.log(cake), cmap = 'viridis')
         ax.set_facecolor("#000084")
         plt.xlabel('Q')
         plt.ylabel('chi')
         #plt.xlim((0.7, 6.8))
         #plt.ylim((-56, 56))
-        plt.clim(0, 9)
+        #plt.clim(0, 9)    plt.clim((0, np.log(np.nanmax(cake))))
+        # the next two lines contributed by S. Suram (JCAP)
+        inds = np.nonzero(cake)
+        plt.clim(scipy.stats.scoreatpercentile(np.log(cake[inds]), 5), scipy.stats.scoreatpercentile(np.log(cake[inds]), 95))
         plt.colorbar()
+        i = imageFilename.find("scan")
+        imageFilename = imageFilename[:i-1]
         name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
-        plt.savefig(name)
+        plt.savefig(name, dpi=300)
         plt.close()
         self.emit(SIGNAL("setImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
 
@@ -306,8 +303,6 @@ def writeStitchProperties():
         properties[1] = thisrun.readline()
         properties[6] = thisrun.readline()
         properties[9] = thisrun.readline()
-        properties[15] = thisrun.readline()
-        properties[16] = thisrun.readline()
     propw = open("Properties.py", 'w')
     for prawperty in properties:
         propw.write(prawperty)

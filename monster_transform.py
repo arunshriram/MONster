@@ -40,7 +40,7 @@ def generateTransformWidgets(self):
     
     self.data_source_check.setChecked(True)
 
-    self.files_to_process = "folder"
+    self.files_to_process = []
     self.calib_label = QLabel("Current calibration file source:")
     self.calib_label.setStyleSheet(self.textStyleSheet)
     self.calib_source = ClickableLineEdit()
@@ -55,7 +55,7 @@ def generateTransformWidgets(self):
     
     self.processed_location_label = QLabel("Current location for processed files:")
     self.processed_location_label.setStyleSheet(self.textStyleSheet)
-    self.processed_location = ClickableLineEdit(self.data_source.text())
+    self.processed_location = ClickableLineEdit(str(self.data_source.text()) + "/Processed_Transform")
     self.processed_location.setStyleSheet(self.lineEditStyleSheet)
     self.processed_location.setFixedWidth(580)
     self.processed_location_folder_button = QPushButton()
@@ -75,6 +75,7 @@ def generateTransformWidgets(self):
     self.console.setMinimumHeight(150)
     self.console.setMaximumHeight(300)
     self.console.setFont(QFont("Avenir", 14))
+    self.console.moveCursor(QTextCursor.End)
     self.console.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")                
 
     self.custom_calib_label = QLabel("Customize your calibration here: ")
@@ -142,7 +143,23 @@ def generateTransformWidgets(self):
     self.bar.setRange(0, 100)
     #self.bar.setValue(30)
     self.bar.setValue(0)
-
+    
+    self.detectorList = []
+    # addDetectorToList(self.detectorList, "PILATUS3 X 100K-A", 487, 195)
+    # addDetectorToList(self.detectorList, "PILATUS3 X 200K-A", 487, 407)
+    # addDetectorToList(self.detectorList, "PILATUS3 X 300K", 487, 619)
+    # addDetectorToList(self.detectorList, "PILATUS3 X 300K-W", 1475, 195)
+    # addDetectorToList(self.detectorList, "PILATUS3 X 1M", 981, 1043)
+    # addDetectorToList(self.detectorList, "PILATUS3 X 2M", 1475, 1679)
+    # addDetectorToList(self.detectorList, "PILATUS3 X 6M", 2463, 2527)
+    self.detector_combo = QComboBox()
+    self.detector_combo.setStyleSheet("QComboBox { border-radius: 4px;  color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); border-style:outset; border-width:4px;  border-radius: 4px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } QAbstractItemView{background: pink;}")
+    # for detector in self.detectorList:
+    #     self.detector_combo.addItem(str(detector))
+        
+def addDetectorToList(lst, name, width, height):
+    det = Detector(name, width, height)
+    lst.append(det)
 
 # Returns the layout for the transform tab
 def generateTransformLayout(self):
@@ -189,7 +206,9 @@ def generateTransformLayout(self):
     h_box7 = QHBoxLayout()
     h_box7.addWidget(self.processed_location)
     h_box7.addWidget(self.processed_location_folder_button)
+    
     h_box7.addStretch()
+    
 
     h_box6 = QHBoxLayout()
     h_box6.addWidget(self.dcenterx)
@@ -209,7 +228,10 @@ def generateTransformLayout(self):
     v_box.addLayout(h_box5)
     v_box.addLayout(h_box6)
     v_box.addWidget(self.saveCustomCalib)    
-    v_box.addWidget(self.processed_location_label)
+    h = QHBoxLayout()
+    h.addWidget(self.processed_location_label)
+    h.addWidget(self.detector_combo)
+    v_box.addLayout(h)
     v_box.addLayout(h_box7)
 
 
@@ -250,18 +272,18 @@ def saveMacro(self, fileName=''):
         self.raise_()
         return
 
-    self.editor.curMacro = Macro(fileName, (str(self.q_min.text()), str(self.q_max.text())), (str(self.chi_min.text()), str(self.chi_max.text())), None, str(self.processed_location.text()), None, transform, stitch, integrate)
+    self.editor.curMacro = Macro(fileName, (str(self.q_min.text()), str(self.q_max.text())), (str(self.chi_min.text()), str(self.chi_max.text())), None, str(self.detector_combo.currentText()), str(self.processed_location.text()), None, transform, stitch, integrate)
 
     
     with open(fileName, 'w') as macro:
-        macro.write("qmin, qmax, chimin, chimax, calib_source, filename, processed_file_source, folder?, data_source_file(s)/directory\n")
+        macro.write("qmin, qmax, chimin, chimax, calib_source, detectortype, filename, processed_file_source, folder?, data_source_file(s)/directory\n")
         data_source = "1"
         filenames = tuple([])
         calib_filename = ''
         
      
         calib_filename = str(self.calib_source.text())
-        if self.files_to_process != "folder":
+        if os.path.isdir(self.files_to_process[0]):
             data_source = "0"
             filenames += tuple(self.files_to_process)
         else:
@@ -270,9 +292,76 @@ def saveMacro(self, fileName=''):
         
         self.editor.curMacro.setCalibInfo(calib_filename)
         self.editor.curMacro.setDataInfo(data_source, filenames)
-        macro.write(("%s, %s, %s, %s, %s, ") % (self.editor.curMacro.getQRange()[0], self.editor.curMacro.getQRange()[1], self.editor.curMacro.getChiRange()[0], self.editor.curMacro.getChiRange()[1], str(self.editor.curMacro.getCalibInfo())) + "%s, " % str(self.editor.curMacro.getProcessedFileDir()) + ", ".join([str(s) for s in list(self.editor.curMacro.getDataFiles())]))
+        macro.write(("%s, %s, %s, %s, %s, %s, ") % (self.editor.curMacro.getQRange()[0], self.editor.curMacro.getQRange()[1], self.editor.curMacro.getChiRange()[0], self.editor.curMacro.getChiRange()[1], str(self.editor.curMacro.getCalibInfo()), str(self.detector_combo.currentText())) + "%s, " % str(self.editor.curMacro.getProcessedFileDir()) + ", ".join([str(s) for s in list(self.editor.curMacro.getDataFiles())]))
         macro.write('\n%s\n' % transform)
         macro.write('%s\n' % stitch)
         macro.write('%s' % integrate)
     self.editor.macroSelected.setText("Current macro selected: %s" % (os.path.dirname(fileName).split("/")[-1] + "/" + os.path.basename(fileName)))
         
+
+# Begins the transform thread
+def transformThreadStart(self):
+    # Check if the user has correctly selected either a folder or a group of files
+    
+    if not self.data_source_check.isChecked() and os.path.isdir(self.files_to_process[0]):
+        self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
+        self.enableWidgets()
+        return
+
+    self.disableWidgets()
+    self.console.moveCursor(QTextCursor.End)
+    QApplication.processEvents()
+    self.console.clear()
+    self.addToConsole('********************************************************')
+    self.addToConsole('********** Beginning Transform Processing... ***********')
+    self.addToConsole('********************************************************')
+    QApplication.processEvents()
+    # grab monitor folder
+    #root = Tkinter.Tk()
+    #root.withdraw()
+
+
+
+    calibPath = str(self.calib_source.text())
+    dataPath = str(self.data_source.text())
+    if  os.path.isdir(dataPath) and self.data_source_check.isChecked():
+        self.files_to_process = [dataPath]
+    # Check if entered calibration information is correctly entered
+    if (calibPath is '' and str(self.detectordistance.text()) == '' and str(self.dcenterx.text()) == '' and str(self.dcentery.text()) == '' and str(self.detect_tilt_alpha.text()) == '' and str(self.detect_tilt_delta.text()) == '' and str(self.wavelength.text()) == '') or dataPath is '':
+
+        self.addToConsole("Please make sure you have entered valid data or calibration source information.")
+        self.enableWidgets()
+        return
+
+    bkgdPath = os.path.expanduser('~/monHiTp/testBkgdImg/bg/a40_th2p0_t45_center_bg_0001.tif')
+    #configPath = tkFileDialog.askopenfilename(title='Select Config File')
+    if bkgdPath is '':
+        self.win.addToConsole('No bkgd file supplied, aborting...')
+        return
+
+    self.addToConsole('Calibration File: ' + calibPath)
+    self.addToConsole('Folder to process: ' + dataPath)
+    self.addToConsole('')        
+
+        # detectorData is just the current calibration attributes that the user has loaded/tweaked
+    detectorData = (str(self.detectordistance.text()), str(self.detect_tilt_alpha.text()), str(self.detect_tilt_delta.text()), str(self.wavelength.text()), str(self.dcenterx.text()), str(self.dcentery.text()), str(self.detector_combo.currentText()))
+    # Initialize transform thread
+    self.transformThread = TransformThread(self, str(self.processed_location.text()), calibPath, detectorData, self.files_to_process)
+    self.transformThread.setAbortFlag(False)
+    # make sure that if the abort button is clicked, it is aborting the current running transform thread, so this needs to be run for every new transform thread
+    self.abort.clicked.connect(self.transformThread.abortClicked)
+    self.int_abort.clicked.connect(self.transformThread.abortClicked)
+
+    # these connections are the only way the thread can communicate with the MONster
+    self.connect(self.transformThread, SIGNAL("addToConsole(PyQt_PyObject)"), self.addToConsole)
+    self.connect(self.transformThread, SIGNAL("setRawImage(PyQt_PyObject)"), self.setRawImage)
+    self.connect(self.transformThread, SIGNAL("enableWidgets()"), self.enableWidgets)
+    self.connect(self.transformThread, SIGNAL("bar(int, PyQt_PyObject)"), self.setRadialBar)
+    self.connect(self.transformThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.done)
+    self.connect(self.transformThread, SIGNAL("enable()"), self.enableWidgets)
+    self.connect(self.transformThread, SIGNAL("resetTransform(PyQt_PyObject)"), resetTransform)
+    self.transformThread.start()
+        
+def resetTransform(self):
+    self.setRawImage("images/SLAC_LogoSD.png")
+    self.bar.setValue(0)

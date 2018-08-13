@@ -1,5 +1,0 @@
-qmin, qmax, chimin, chimax, calib_source, filename, processed_file_source, folder?, data_source_file(s)/directory
-1.0, 6.0, -20.0, 20.0, /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib, /Users/arunshriram/Documents/SLAC Internship/MONster/test, , /Users/arunshriram/Documents/SLAC Internship/MONster/test/k5_022318_1_24x24_t45_0313.tif
-True
-False
-False
