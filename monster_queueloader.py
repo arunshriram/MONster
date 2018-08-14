@@ -1182,7 +1182,10 @@ def beginQueue(self):
     increment = (1/float(count))*100
     progress = 0
     self.queue_bar.setValue(progress)
+    macrindex = 0
+    self.disableWidgets()
     for macro in self.macroQueue:
+        self.queue.setCurrentIndex(macrindex)
         self.addToConsole("Processing %s..." % os.path.basename(str(macro.getFilename())))
         curFileCount = 0
         if macro.isWorkflow():
@@ -1264,6 +1267,8 @@ def beginQueue(self):
                 startIntegrateThread(self, dataFiles, calib_source, detectorData, processed_filedir, QRange, ChiRange )         
                 progress += increment
                 self.queue_bar.setValue(progress)
+        macrindex += 1
+    self.enableWidgets()
 
 # list str tuple str -> None
 # Takes a list of datafiles (either a list with a string folder name inside or a list of pathnames), a calibration source, a tuple of detector data, and a processed file directory, and starts the transform thread.

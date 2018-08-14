@@ -57,6 +57,8 @@ class StitchThread(QThread):
         self.wait()
         
     def abortClicked(self):
+        self.emit(SIGNAL("enableWidgets()"))
+
         try:
             if self.isRunning():
                 self.abort_flag = True
@@ -82,7 +84,7 @@ class StitchThread(QThread):
         dphi = 1
         rq = 250
         rchi = 5
-        phis = [ [ None for c in range(numphi) ] for r in range(1) ]
+        phis = [ [ None for c in range(numphi) ] for r in range(1) ]    
         for i in range(numphi):
             phival = firstphi + i * dphi
             if phival < 10:
@@ -268,7 +270,7 @@ class StitchThread(QThread):
     
         fig = plt.figure(1)
         ax = fig.add_subplot(1, 1, 1)
-        plt.title('Q-chi polarization corrected_log scale')
+        # plt.title('Q-chi polarization corrected_log scale')
         plt.pcolormesh(Q, chi, np.log(cake), cmap = 'viridis')
         ax.set_facecolor("#000084")
         plt.xlabel('Q')

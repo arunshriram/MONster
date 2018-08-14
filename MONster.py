@@ -404,6 +404,7 @@ class MONster(QTabWidget):
                 button.setDisabled(True)
         for box in self.findChildren(QCheckBox):
             box.setDisabled(True)
+        self.detector_combo.setDisabled(True)
 
     # enables all widgets
     def enableWidgets(self):
@@ -413,7 +414,8 @@ class MONster(QTabWidget):
                 button.setEnabled(True)
         for box in self.findChildren(QCheckBox):
             box.setEnabled(True)
-        
+        self.detector_combo.setEnabled
+
    
         
     
