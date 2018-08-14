@@ -216,6 +216,8 @@ class IntegrateThread(QThread):
     
     # Defines what should be done when the user aborts the current integration.
     def abortClicked(self):
+        self.emit(SIGNAL("enableWidgets()"))
+
         try:
             if self.isRunning():
                 self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Process aborted! Completing any processes that were already started...")                
