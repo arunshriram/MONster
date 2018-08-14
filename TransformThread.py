@@ -196,8 +196,8 @@ class TransformThread(QThread):
             with open("thisRun.txt", 'w') as runFile:
                 
                 runFile.write("t_data_source = \"" + re.escape(str(self.dataPath))+'\"\n')
-                runFile.write("t_calib_source = \"" + re.escape(str(self.calibPath)+'\"\n')
-                runFile.write("t_processed_loc = \"" + re.escape(str(self.processedPath) + '\"\n')
+                runFile.write("t_calib_source = \"" + re.escape(str(self.calibPath))+'\"\n')
+                runFile.write("t_processed_loc = \"" + re.escape(str(self.processedPath) )+ '\"\n')
                 name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma.png')                
                 self.emit(SIGNAL("setRawImage(PyQt_PyObject)"), re.escape(name))
                 runFile.write("two_d_image = \"" + name + '\"\n')
