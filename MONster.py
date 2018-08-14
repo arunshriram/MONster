@@ -415,7 +415,7 @@ class MONster(QTabWidget):
                 button.setEnabled(True)
         for box in self.findChildren(QCheckBox):
             box.setEnabled(True)
-        self.detector_combo.setEnabled
+        self.detector_combo.setEnabled(True)
 
    
         

@@ -647,7 +647,7 @@ class MacroEditor(QWidget):
                 if folderpath != '':
                     self.data_source.setText(folderpath)
                     self.data_label.setText("Current data source:")
-                    self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                    self.processed_location.setText(os.path.join(str(self.data_source.text()),   "Processed_Transform"))
                     self.t_files_to_process = [folderpath]
             except: 
                 self.addToConsole("Something went wrong when trying to open your directory.")
@@ -660,7 +660,7 @@ class MacroEditor(QWidget):
                 else:    
                     self.data_label.setText("Current data source: (multiple files)")
                     self.data_source.setText(os.path.dirname(filenames[0]))
-                self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                self.processed_location.setText(os.path.join(str(self.data_source.text())  , "Processed_Transform"))
                 self.t_files_to_process = filenames   
             except:
                 #traceback.print_exc()
@@ -673,7 +673,7 @@ class MacroEditor(QWidget):
                 if folderpath != '':
                     self.int_data_source.setText(folderpath)
                     self.int_data_label.setText("Current data source:")
-                    self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Integrate")
+                    self.int_processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Integrate"))
                     self.i_files_to_process = [folderpath]
             except: 
                 self.addToConsole("Something went wrong when trying to open your directory.")
@@ -687,7 +687,7 @@ class MacroEditor(QWidget):
                 else:    
                     self.int_data_label.setText("Current data source: (multiple files)")
                 self.int_data_source.setText(os.path.dirname(filenames[0]))
-                self.int_processed_location.setText(str(self.data_source.text()) + "/Processed_Integrate")
+                self.int_processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Integrate"))
                 self.i_files_to_process = filenames   
             except:
                 #traceback.print_exc()
@@ -788,7 +788,7 @@ class MacroEditor(QWidget):
             return
 
         if str(self.processed_location.text()) == "":
-            self.processed_location.setText(str(self.data_source.text()) + "/Processed_Transform")
+            self.processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Transform"))
            
 
         if self.t_files_to_process == []:
@@ -855,7 +855,7 @@ class MacroEditor(QWidget):
                     writer.writerow([key, value])
                 
             self.curMacro = Macro(fileName, macrodict)
-            self.macroSelected.setText("Current macro selected: %s" % (os.path.dirname(fileName).split("/")[-1] + "/" + os.path.basename(fileName)))
+            self.macroSelected.setText("Current macro selected: %s" % (os.path.join(os.path.dirname(fileName).split("/")[-1], os.path.basename(fileName))))
             return
 
         # If the user is editing individual actions: ***************
@@ -919,7 +919,7 @@ class MacroEditor(QWidget):
                 writer.writerow([key, value])
                 
         self.curMacro = Macro(fileName, macrodict)
-        self.macroSelected.setText("Current macro selected: %s" % (os.path.dirname(fileName).split("/")[-1] + "/" + os.path.basename(fileName)))
+        self.macroSelected.setText("Current macro selected: %s" % (os.path.join(os.path.dirname(fileName).split("/")[-1], os.path.basename(fileName))))
             
     
     def loadMacro(self):
@@ -1027,7 +1027,7 @@ class MacroEditor(QWidget):
             self.transformCheck.setChecked(transform)
             self.stitchCheck.setChecked(stitch)
             self.integrateCheck.setChecked(integrate)
-            self.macroSelected.setText("Current macro selected: %s" % (os.path.dirname(str(filename)).split("/")[-1] + "/" + os.path.basename(str(filename))))
+            self.macroSelected.setText("Current macro selected: %s" % (os.path.join(os.path.dirname(str(filename)).split("/")[-1], os.path.basename(str(filename)))))
             if self.data_source_check.isChecked():
                 self.data_label.setText("Current data source:")
      
@@ -1210,7 +1210,7 @@ def beginQueue(self):
 
             dataFiles = [processed_filedir]    
 
-            s_processed_filedir = processed_filedir + "/Processed_Stitch"    
+            s_processed_filedir = os.path.join(processed_filedir, "Processed_Stitch")    
             
             startStitchThread(self, dataFiles[0], s_processed_filedir)
             while self.processDone == False:
@@ -1224,7 +1224,7 @@ def beginQueue(self):
             # **************** INTEGRATE PROCESSING **************
 
             dataFiles = [processed_filedir]
-            i_processed_filedir = processed_filedir + "/Processed_Integrate"    
+            i_processed_filedir = os.path.join(processed_filedir ,"Processed_Integrate"    )
 
             startIntegrateThread(self, dataFiles, calib_source, detectorData, i_processed_filedir, QRange, ChiRange)
             progress += increment

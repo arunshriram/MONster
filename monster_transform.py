@@ -296,7 +296,7 @@ def saveMacro(self, fileName=''):
         macro.write('\n%s\n' % transform)
         macro.write('%s\n' % stitch)
         macro.write('%s' % integrate)
-    self.editor.macroSelected.setText("Current macro selected: %s" % (os.path.dirname(fileName).split("/")[-1] + "/" + os.path.basename(fileName)))
+    self.editor.macroSelected.setText("Current macro selected: %s" % (os.path.join(os.path.dirname(fileName).split("/")[-1], os.path.basename(fileName))))
         
 
 # Begins the transform thread

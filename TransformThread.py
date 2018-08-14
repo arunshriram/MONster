@@ -195,11 +195,11 @@ class TransformThread(QThread):
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
             with open("thisRun.txt", 'w') as runFile:
                 
-                runFile.write("t_data_source = \"" + re.escape(str(self.dataPath))+'\"\n')
-                runFile.write("t_calib_source = \"" + re.escape(str(self.calibPath))+'\"\n')
-                runFile.write("t_processed_loc = \"" + re.escape(str(self.processedPath) )+ '\"\n')
+                runFile.write("t_data_source = \"" + str(self.dataPath)+'\"\n')
+                runFile.write("t_calib_source = \"" + str(self.calibPath)+'\"\n')
+                runFile.write("t_processed_loc = \"" + str(self.processedPath )+ '\"\n')
                 name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma.png')                
-                self.emit(SIGNAL("setRawImage(PyQt_PyObject)"), re.escape(name))
+                self.emit(SIGNAL("setRawImage(PyQt_PyObject)"), (name))
                 runFile.write("two_d_image = \"" + name + '\"\n')
                      
                 QApplication.processEvents()

@@ -106,7 +106,7 @@ def stitchImageSelect(self):
         folderpath = str(QFileDialog.getExistingDirectory(directory=os.getcwd()))
         if folderpath != '':
             self.images_select.setText(folderpath)
-            self.stitch_saveLocation.setText(folderpath + "/Processed_Stitch")
+            self.stitch_saveLocation.setText(os.path.join(folderpath, "Processed_Stitch"))
             self.stitch_files_to_process = folderpath
     except:
         self.addToConsole("Something went wrong when trying to open your directory.")
@@ -175,7 +175,7 @@ def setStitchImage(self, filename):
     try:
         pixmap = QPixmap(filename)   
         if filename == "":
-            pixmap = QPixmap("images/SLAC_LogoSD.png")
+            pixmap = QPixmap("images/SLAC_LogoSD.png", "1")
         self.stitchImage.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
         QApplication.processEvents()
     except:

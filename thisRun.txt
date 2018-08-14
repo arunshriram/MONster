@@ -1,3 +1,4 @@
-s_data_source = "/Users/arunshriram/Documents/SLAC Internship/Pilatus_charlie/Processed_Transform"
-s_processed_loc = "/Users/arunshriram/Documents/SLAC Internship/Pilatus_charlie/Processed_Transform/Processed_Stitch"
-stitch_image = "/Users/arunshriram/Documents/SLAC Internship/Pilatus_charlie/Processed_Transform/Processed_Stitch/abs_ins_0000_042418-172735_Qchi_gamma.png"
+t_data_source = "/Users/arunshriram/Documents/SLAC Internship/Pilatus_charlie"
+t_calib_source = "/Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib"
+t_processed_loc = "/Users/arunshriram/Documents/SLAC Internship/Pilatus_charlie/Processed_Transform"
+two_d_image = "/Users/arunshriram/Documents/SLAC Internship/Pilatus_charlie/Processed_Transform/abs_ins_0000_042418-172419_gamma.png"

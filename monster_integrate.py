@@ -204,7 +204,7 @@ def set1DImage(self, filename):
     try:
         pixmap = QPixmap(filename)
         if filename == "":
-            pixmap = QPixmap("images/SLAC_LogoSD.png")        
+            pixmap = QPixmap("images/SLAC_LogoSD.png", "1")        
         self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
         QApplication.processEvents()
     except:
@@ -383,7 +383,7 @@ def getIntDataSourceDirectoryPath(self):
             if folderpath != '':
                 self.int_data_source.setText(folderpath)
                 self.int_data_label.setText("Current data source:")
-                self.int_processed_location.setText(folderpath + "/Processed_Integrate")
+                self.int_processed_location.setText(os.path.join(folderpath, "Processed_Integrate"))
                 self.files_to_process = [folderpath]
         except:
             self.addToConsole("Something went wrong when trying to open your directory.")
@@ -397,7 +397,7 @@ def getIntDataSourceDirectoryPath(self):
             else:
                 self.int_data_label.setText("Current data source: (multiple files)")
             self.int_data_source.setText(os.path.dirname(filenames[0]))
-            self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")
+            self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()),  "Processed_Integrate"))
             self.files_to_process = filenames
         except:
             #traceback.print_exc()
