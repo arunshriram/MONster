@@ -39,10 +39,10 @@ class Detector():
         self.height = height
         
     def __eq__(self, other):
-        return type(other) == Detector and self.name == other.name and self.width == other.width and self.height == other.height
+        return self.name == other.name and self.width == other.width and self.height == other.height
     
     def __repr__(self):
-        return ("%s: , Width: %s, Height: %s" % (self.name, self.width, self.height))
+        return ("%s, Width: %s, Height: %s" % (self.name, self.width, self.height))
     
     def getName(self):
         return self.name
@@ -56,7 +56,7 @@ class Detector():
 # based on the tif and raw files the user supplies.
 class TransformThread(QThread):
 
-    def __init__(self, windowreference, processedPath, calibPath, detectorData, files_to_process):
+    def __init__(self, windowreference, processedPath, calibPath, detectorData, files_to_process, increment):
         QThread.__init__(self)
         self.calibPath = calibPath
         self.processedPath = processedPath
@@ -65,6 +65,7 @@ class TransformThread(QThread):
         self.files_to_process = files_to_process
         self.windowreference = windowreference
         self.curDetector = None
+        self.increment = increment
         try:
             if os.path.isdir(files_to_process[0]):
                 self.dataPath = files_to_process[0]
@@ -142,9 +143,14 @@ class TransformThread(QThread):
         loopTime = []
         stage1Time = []
         stage2Time = []
-        increment = (1/float(len(files)))*100
+        mode = 0
+        if self.increment != 0:
+            increment = self.increment
+            mode = 3
+        else:
+            increment = (1/float(len(files)))*100
         progress = 0
-        self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 0, progress)
+        self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
         self.emit(SIGNAL("resetTransform(PyQt_PyObject)"), self.windowreference) 
         self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Using detector %s"% self.curDetector.getName())        
         save_path = str(self.processedPath)
@@ -190,7 +196,7 @@ class TransformThread(QThread):
             stage2Time += [(stage2int - stage1int)]
         
     
-            save_path = os.path.join(os.path.dirname(filePath), "Processed_Transform")
+            save_path = str(self.processedPath)
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
             with open("thisRun.txt", 'w') as runFile:
@@ -205,8 +211,10 @@ class TransformThread(QThread):
                 QApplication.processEvents()
                         
             progress += increment
-
-            self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 0, progress)
+            if self.increment != 0:
+                self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, increment)
+            else:
+                self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
   
         writeTransformProperties()
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), loopTime, stage1Time, stage2Time)

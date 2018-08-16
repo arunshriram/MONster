@@ -55,7 +55,7 @@ def generateTransformWidgets(self):
     
     self.processed_location_label = QLabel("Current location for processed files:")
     self.processed_location_label.setStyleSheet(self.textStyleSheet)
-    self.processed_location = ClickableLineEdit(str(self.data_source.text()) + "/Processed_Transform")
+    self.processed_location = ClickableLineEdit(os.path.join(str(self.data_source.text()), "Processed_Transform"))
     self.processed_location.setStyleSheet(self.lineEditStyleSheet)
     self.processed_location.setFixedWidth(580)
     self.processed_location_folder_button = QPushButton()
@@ -144,6 +144,8 @@ def generateTransformWidgets(self):
     #self.bar.setValue(30)
     self.bar.setValue(0)
     
+    self.detector_label = QLabel("Select your detector (Only matters for .raw files)")
+    self.detector_label.setStyleSheet(self.textStyleSheet)
     self.detectorList = []
     # addDetectorToList(self.detectorList, "PILATUS3 X 100K-A", 487, 195)
     # addDetectorToList(self.detectorList, "PILATUS3 X 200K-A", 487, 407)
@@ -227,7 +229,11 @@ def generateTransformLayout(self):
     v_box.addWidget(self.custom_calib_label)
     v_box.addLayout(h_box5)
     v_box.addLayout(h_box6)
-    v_box.addWidget(self.saveCustomCalib)    
+    hi = QHBoxLayout()
+    hi.addWidget(self.saveCustomCalib)    
+    hi.addStretch()
+    hi.addWidget(self.detector_label)
+    v_box.addLayout(hi)
     h = QHBoxLayout()
     h.addWidget(self.processed_location_label)
     h.addWidget(self.detector_combo)
@@ -346,7 +352,7 @@ def transformThreadStart(self):
         # detectorData is just the current calibration attributes that the user has loaded/tweaked
     detectorData = (str(self.detectordistance.text()), str(self.detect_tilt_alpha.text()), str(self.detect_tilt_delta.text()), str(self.wavelength.text()), str(self.dcenterx.text()), str(self.dcentery.text()), str(self.detector_combo.currentText()))
     # Initialize transform thread
-    self.transformThread = TransformThread(self, str(self.processed_location.text()), calibPath, detectorData, self.files_to_process)
+    self.transformThread = TransformThread(self, str(self.processed_location.text()), calibPath, detectorData, self.files_to_process, 0)
     self.transformThread.setAbortFlag(False)
     # make sure that if the abort button is clicked, it is aborting the current running transform thread, so this needs to be run for every new transform thread
     self.abort.clicked.connect(self.transformThread.abortClicked)
@@ -360,6 +366,7 @@ def transformThreadStart(self):
     self.connect(self.transformThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.done)
     self.connect(self.transformThread, SIGNAL("enable()"), self.enableWidgets)
     self.connect(self.transformThread, SIGNAL("resetTransform(PyQt_PyObject)"), resetTransform)
+    self.connect(self.transformThread, SIGNAL("incrementBar(PyQt_PyObject)"), self.incrementBar)
     self.transformThread.start()
         
 def resetTransform(self):

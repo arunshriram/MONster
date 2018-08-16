@@ -113,13 +113,56 @@ class DetectorEditor(QWidget):
         self.updateConnections()        
 
      
-
+    def removeDetector(self):
+        curRow = self.listwidget.currentRow()
+        if curRow >= 0:
+            message = QLabel("Are you sure you want to delete this detector?\n\n%s" % str(self.detectorlist[curRow]))
+            self.win = QWidget()
+            self.win.setWindowTitle('ARE YOU SURE?')
+            self.ok = QPushButton('Yeah, get rid of it')
+            self.no = QPushButton("Please don't")
+            self.ly = QVBoxLayout()
+            self.ly.addWidget(message)
+            h = QHBoxLayout()
+            h.addWidget(self.ok)
+            h.addWidget(self.no)
+            self.ly.addLayout(h)
+            self.win.setLayout(self.ly)    
+            self.no.clicked.connect(lambda: self.win.close())
+            def rem():
+                self.listwidget.takeItem(curRow)
+                self.windowreference.detector_combo.removeItem(curRow)
+                del self.detectorlist[curRow]
+                inFile = open("Properties.py", 'r')
+                properties = []
+                for line in inFile:
+                    properties.append(line)
+                inFile.close()
+                outFile = open("Properties.py", 'w')
+                for prop in properties:
+                    if "detectors" not in prop:
+                        outFile.write(prop)
+                    else:
+                        hi = []
+                        for d in self.detectorlist:
+                            hi.append(str(d))
+                        outFile.write("detectors = " + str(hi))
+                outFile.close()
+                self.win.close()
+            self.ok.clicked.connect(rem)
+            self.win.show()
+            self.win.raise_()
+        else:
+            displayError(self, "No detector selected!")
+            return
+                        
     def updateConnections(self):
         self.closeButton.clicked.connect(lambda: self.close())
         self.addButton.clicked.connect(self.addDetector)
         self.name.returnPressed.connect(self.addDetector)
         self.width.returnPressed.connect(self.addDetector)
         self.height.returnPressed.connect(self.addDetector)
+        self.removeButton.clicked.connect(self.removeDetector)
 
     def addDetector(self):
         if self.name.text().isEmpty() or self.width.text().isEmpty() or self.height.text().isEmpty():
@@ -133,6 +176,14 @@ class DetectorEditor(QWidget):
             displayError(self, "Could not add your values.")
             return
         detector = Detector(name, width, height)
+        exists = False
+        for det in self.detectorlist:
+            if Detector.__eq__(det,detector):
+                exists = True
+                break
+        if exists  :
+            displayError(self, "This detector already exists!")
+            return
         self.detectorlist.append(detector)
         properties = []
         inFile = open("Properties.py", 'r')
@@ -175,9 +226,9 @@ class MONster(QTabWidget):
         self.editor = mq.MacroEditor(self) # reference to the queue macro editor
         self.detectorWindow = DetectorEditor(self)
         self.processDone = True # To check if current process in the macro queue is over
-        self.transformThread = TransformThread(self, None, None, None, None)  # initialize the transform thread
-        self.integrateThread = IntegrateThread(self, None, None, None, None, None) # initialize the integrate thread
-        self.stitchThread = StitchThread(self, None, None) # initialize the stitch thread        
+        self.transformThread = TransformThread(self, None, None, None, None, 0)  # initialize the transform thread
+        self.integrateThread = IntegrateThread(self, None, None, None, None, None, None) # initialize the integrate thread
+        self.stitchThread = StitchThread(self, None, None, None) # initialize the stitch thread        
         self.updateUi()
         
     # Generates layouts and sets connections between buttons and functions
@@ -265,7 +316,18 @@ class MONster(QTabWidget):
         self.stitch_saveLocation_button.clicked.connect(lambda: ms.setStitchSaveLocation(self))
         
         self.centerButton.clicked.connect(lambda: mi.centerButtonClicked(self))
+        
+        self.saveQueueButton.clicked.connect(lambda: mq.saveQueue(self))
       
+        def doubleclick():
+            row = self.queue.currentRow()
+            if len(self.macroQueue) > 0:
+                self.editor.loadMacro(self.macroQueue[row].getFilename())
+                self.editor.show()
+                self.editor.raise_()
+
+        self.queue.itemDoubleClicked.connect(doubleclick)
+
         ###########################################
         ###########################
         #Restore default graphs and data from the previous run upon starting MONster
@@ -401,11 +463,12 @@ class MONster(QTabWidget):
         for editor in self.findChildren(ClickableLineEdit):
             editor.setDisabled(True)
         for button in self.findChildren(QPushButton):
-            if button != self.abort and button != self.int_abort and button != self.stitch_abort:
+            if button != self.abort and button != self.int_abort and button != self.stitch_abort and button != self.stopQueueButton and button != self.pauseQueueButton:
                 button.setDisabled(True)
         for box in self.findChildren(QCheckBox):
             box.setDisabled(True)
         self.detector_combo.setDisabled(True)
+        self.changeTabCheck.setEnabled(True)
 
     # enables all widgets
     def enableWidgets(self):
@@ -594,7 +657,7 @@ class MONster(QTabWidget):
         path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.data_source.text())))
         #path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
         if path !='':
-            self.processed_location.setText(path)
+            self.processed_location.setText(os.path.join(path, "Processed_Transform"))
         
     # Returns the number of lines in a file
     def file_len(self, fname):
@@ -603,12 +666,13 @@ class MONster(QTabWidget):
                 pass
         return i + 1        
     
-
-            
-        
-    
-            
-
+    def incrementBar(self, inc):
+        cur_val = self.queue_bar.getValue()
+        new_val = cur_val + inc
+        self.queue_bar.setValue(new_val)
+        self.bar.setValue(new_val)
+        self.int_bar.setValue(new_val)
+        self.stitchbar.setValue(new_val)
            
     # Sets the bar progress to whatever value is passed in
     def setRadialBar(self, bartype, val):
@@ -618,8 +682,9 @@ class MONster(QTabWidget):
             self.bar.setValue(val)
         elif bartype == 2:
             self.stitchbar.setValue(val)
+        elif bartype == 3:
+            self.incrementBar(val)
             
-        self.queue_bar_files.setValue(val)
     # tuple -> None
     # Accepts the event of the mouse movement and updates the moving coordinate label accordingly (for 1D plots)
     def mouseMoved(self, evt):
@@ -714,7 +779,10 @@ class Menu(QMainWindow):
         
         quit_action.triggered.connect(lambda: qApp.quit())
         clear_prop.triggered.connect(self.clearProperties)
-        detectors.triggered.connect(lambda: self.form_widget.detectorWindow.show())
+        def stupidpoopypants():
+            self.form_widget.detectorWindow.show()
+            self.form_widget.detectorWindow.raise_()
+        detectors.triggered.connect(stupidpoopypants)
         self.setWindowTitle('MONster')
         
         self.setStyleSheet("background-color: rgb(29, 30,51);")
@@ -724,28 +792,34 @@ class Menu(QMainWindow):
         self.setFixedSize(self.minimumSizeHint())
         
     def clearProperties(self):
-        detectors = []
-        with open("Properties.py", 'r') as prop:
-            for i in range(14):
-                prop.readline()
-            detectors = ast.literal_eval(prop.readline().split("= ")[1])
-        with open("Properties.py", 'w') as prop:
-            prop.write("t_data_source = \"\"\n")
-            prop.write("s_data_source = \"\"\n")
-            prop.write("i_data_source = \"\"\n")
-            prop.write("t_calib_source = \"\"\n")
-            prop.write("i_calib_source = \"\"\n")
-            prop.write("t_processed_loc = \"\"\n")
-            prop.write("s_processed_loc = \"\"\n")
-            prop.write("i_processed_loc = \"\"\n")
-            prop.write("two_d_image = \"\"\n")
-            prop.write("stitch_image = \"\"\n")
-            prop.write("one_d_image = \"\"\n")
-            prop.write("qmin = \"\"\n")
-            prop.write("qmax = \"\"\n")
-            prop.write("chimin = \"\"\n")
-            prop.write("chimax = \"\"\n")
-            prop.write("detectors = " + str(detectors))
+        try:
+            detectors = []
+            with open("Properties.py", 'r') as prop:
+                for i in range(15):
+                    prop.readline()
+                detectors = ast.literal_eval(prop.readline().split("= ")[1])
+                with open("Properties.py", 'w') as prop:
+                    prop.write("t_data_source = \"\"\n")
+                    prop.write("s_data_source = \"\"\n")
+                    prop.write("i_data_source = \"\"\n")
+                    prop.write("t_calib_source = \"\"\n")
+                    prop.write("i_calib_source = \"\"\n")
+                    prop.write("t_processed_loc = \"\"\n")
+                    prop.write("s_processed_loc = \"\"\n")
+                    prop.write("i_processed_loc = \"\"\n")
+                    prop.write("two_d_image = \"\"\n")
+                    prop.write("stitch_image = \"\"\n")
+                    prop.write("one_d_image = \"\"\n")
+                    prop.write("qmin = \"\"\n")
+                    prop.write("qmax = \"\"\n")
+                    prop.write("chimin = \"\"\n")
+                    prop.write("chimax = \"\"\n")
+                    prop.write("detectors = " + str(detectors))
+        except:
+            self.form_widget.addToConsole("Could not clear properties - something is wrong with the Properties.py file!")
+            return
+        
+
   
         
         

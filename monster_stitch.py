@@ -148,6 +148,7 @@ def beginStitch(self):
     self.connect(self.stitchThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject)"), stitchDone)
     self.connect(self.stitchThread, SIGNAL("setImage(PyQt_PyObject, PyQt_PyObject)"), setStitchImage)
     self.connect(self.stitchThread, SIGNAL("resetStitch(PyQt_PyObject)"), resetStitch)
+    self.connect(self.stitchThread, SIGNAL("incrementBar(PyQt_PyObject)"), self.incrementBar)
     self.stitchThread.start()    
 
 # What should be done after a stitch thread is finished

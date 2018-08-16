@@ -24,13 +24,14 @@ from image_loader import load_image
 import time, glob, os, re, random
 from saveDimRedPack import save_1Dplot, save_1Dcsv, save_texture_plot_csv
 from extDimRedPack import ext_max_ave_intens, ext_peak_num, ext_text_extent, ext_SNR
-import traceback
+import traceback, csv
 from reportFn import addFeatsToMaster
 from add_feature_to_master import add_feature_to_master
 import monster_integrate as mi
+import pyqtgraph.exporters
 # The class that defines a thread that runs the integration processing 
 class IntegrateThread(QThread):
-    def __init__(self, windowreference, calibPath, processedpath, detectordata, files_to_process, ranges):
+    def __init__(self, windowreference, calibPath, processedpath, detectordata, files_to_process, ranges, increment):
         QThread.__init__(self)
         self.files_to_process = files_to_process
         self.calibPath = calibPath
@@ -40,6 +41,7 @@ class IntegrateThread(QThread):
         self.PP = 0.95           
         self.windowreference = windowreference
         self.processedPath = processedpath
+        self.increment = increment
 
         if ranges != None:
             self.QRange = (float(ranges[0][0]), float(ranges[0][1]))
@@ -76,7 +78,13 @@ class IntegrateThread(QThread):
         loopTime = []
         stage1Time = []
         stage2Time = []
-        increment = (1/float(len(files)))*100
+        mode = 1
+        if self.increment != 0:
+            increment = self.increment
+            mode = 3
+        else:
+
+            increment = (1/float(len(files)))*100
         progress = 0
         self.emit(SIGNAL("resetIntegrate(PyQt_PyObject)"), self.windowreference)
         # generate a folder to put processed files
@@ -128,7 +136,7 @@ class IntegrateThread(QThread):
                 runFile.write("i_data_source = \"" + str(self.dataPath)+'\"\n')
                 runFile.write("i_calib_source = \"" + str(self.calibPath)+'\"\n')
                 runFile.write("i_processed_loc = \"" + str(self.processedPath) + '\"\n')
-                name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_1D.png')                
+                name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_1D.csv')                
                 self.emit(SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
                 runFile.write("one_d_image = \"" + name + '\"\n')
                 QApplication.processEvents()
@@ -138,7 +146,10 @@ class IntegrateThread(QThread):
                 runFile.write("chimax = \"" + str(self.ChiRange[1]) + "\"\n")
             progress += increment
            
-            self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 1, progress)
+            if self.increment != 0:
+                self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, increment)
+            else:
+                self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
         writeIntegrateProperties()
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), loopTime, stage1Time, stage2Time)
         #self.stop()
@@ -186,7 +197,7 @@ class IntegrateThread(QThread):
         #integrated_cake = np.nanmean(to_int ,  axis=0)
         integrated_cake = np.nanmean(cakeArray ,  axis=0)
         self.windowreference.one_d_graph.clear()
-        
+        QApplication.processEvents()
         self.windowreference.one_d_graph.plot(qArray.flatten(), integrated_cake)
         self.windowreference.one_d_graph.autoRange()
         mi.centerButtonClicked(self.windowreference)
@@ -195,7 +206,14 @@ class IntegrateThread(QThread):
         p = QPixmap.grabWindow(self.windowreference.one_d_graph.winId())
         imageFilename = os.path.basename(pathname.rsplit('.', 1)[0])
         filename = os.path.join(self.processedPath, os.path.splitext(imageFilename)[0]+'_1D.png') 
-        p.save(filename, 'png')                 
+        p.save(filename, 'png')          
+        txtfilename = os.path.join(self.processedPath, os.path.splitext(imageFilename)[0]+'_1D.csv') 
+        #with open(txtfilename, 'wb') as csvfile:
+            #writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+            #writer.writerow(qArray.flatten())
+            #writer.writerow(integrated_cake)
+        exporter = pyqtgraph.exporters.CSVExporter(self.windowreference.one_d_graph.plotItem)
+        exporter.export(txtfilename)
         # data_reduction to generate 1D spectra, Q
         #Qlist, IntAve = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
 

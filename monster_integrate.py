@@ -19,7 +19,8 @@ import os, datetime
 from IntegrateThread import *
 from input_file_parsing import parse_calib
 import pyqtgraph as pg
-
+import csv
+import numpy as np
 # Adds functionality to right-clicking the graph (autoscaling it to bring it to view) and to dragging the mouse (adds a rectangle and zooms into whatever's in that rectangle)
 class CustomViewBox(pg.ViewBox):
     def __init__(self, *args, **kwds):
@@ -202,12 +203,27 @@ def generateIntegrateWidgets(self):
 # Takes a filename and displays the 1D image specified by the filename on the GUI.
 def set1DImage(self, filename):
     try:
-        pixmap = QPixmap(filename)
-        if filename == "":
-            pixmap = QPixmap("images/SLAC_LogoSD.png", "1")        
-        self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
+        with open(filename, 'rb') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            qArray = []
+            integrated_cake = []
+            for row in reader:
+                x = 0 # do something to skip line
+                break
+            for row in reader:
+                qArray.append(float(row[0]))
+                integrated_cake.append(float(row[1]))
+                
+            #qArray = reader['x0000']
+            #integrated_cake = reader['y0000']
+        self.one_d_graph.plot(qArray, integrated_cake)
+        # pixmap = QPixmap(filename)
+        # if filename == "":
+        #     pixmap = QPixmap("images/SLAC_LogoSD.png", "1")        
+        # self.one_d_graph.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
         QApplication.processEvents()
     except:
+        traceback.print_exc()
         self.addToConsole("Could not load integrated image.")
         
 
@@ -357,7 +373,7 @@ def integrateThreadStart(self):
 
 
     detectorData = (self.int_detectordistance.text(), self.int_detect_tilt_alpha.text(), self.int_detect_tilt_delta.text(), self.int_wavelength.text(), self.int_dcenterx.text(), self.int_dcentery.text())
-    self.integrateThread = IntegrateThread(self, calibPath, str(self.int_processed_location.text()), detectorData, self.files_to_process, (self.QRange, self.ChiRange))
+    self.integrateThread = IntegrateThread(self, calibPath, str(self.int_processed_location.text()), detectorData, self.files_to_process, (self.QRange, self.ChiRange), 0)
     self.integrateThread.setAbortFlag(False)
     self.int_abort.clicked.connect(self.integrateThread.abortClicked)
     
@@ -367,6 +383,7 @@ def integrateThreadStart(self):
     self.connect(self.integrateThread, SIGNAL("finished(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.done)
     self.connect(self.integrateThread, SIGNAL("bar(int, PyQt_PyObject)"), self.setRadialBar)
     self.connect(self.integrateThread, SIGNAL("resetIntegrate(PyQt_PyObject)"), resetIntegrate)
+    self.connect(self.integrateThread, SIGNAL("incrementBar(PyQt_PyObject)"), self.incrementBar)
     self.disableWidgets()
     self.integrateThread.start()
     
@@ -436,7 +453,7 @@ def setIntProcessedLocation(self):
     path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text())))
     #path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
     if path !='':
-        self.int_processed_location.setText(path)
+        self.int_processed_location.setText(os.path.join(path, "Processed_Integrate"))
     
 def saveIntCalibAction(self):
     name = ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/cal-%s.calib') %(datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S'))

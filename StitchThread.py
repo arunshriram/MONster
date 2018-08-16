@@ -28,11 +28,12 @@ cancelclicked = False
 # based on the tif and raw files the user supplies.
 class StitchThread(QThread):
 
-    def __init__(self, windowreference, dataPath, savePath):
+    def __init__(self, windowreference, dataPath, savePath, increment):
         QThread.__init__(self)
         self.windowreference = windowreference
         self.dataPath = dataPath
         self.savePath = savePath
+        self.increment = increment
 
     
     def setAbortFlag(self, boo):
@@ -75,9 +76,14 @@ class StitchThread(QThread):
     def beginStitch(self):
         loopTime = []
         fileList = sorted(glob.glob(os.path.join(self.dataPath, '*.mat')))
-        
         numFiles = len(fileList)
-        increment = (1/(float(numFiles) + 1))*100
+        mode = 2
+        if self.increment != 0:
+            increment = self.increment
+            mode = 3
+        else:
+
+            increment = (1/(float(numFiles) + 1))*100
         progress = 0
         firstphi = 0
         numphi = 1
@@ -122,7 +128,8 @@ class StitchThread(QThread):
         chi0 = np.arange(chi0min, chi0max + dchi0, dchi0)
         Qchi0_allphi = np.zeros((lchi0int, lq0int))
         Qchi0log_allphi = np.zeros((lchi0int, lq0int))
-        self.emit(SIGNAL("resetStitch(PyQt_PyObject)"), self.windowreference)
+        if self.increment == 0:
+            self.emit(SIGNAL("resetStitch(PyQt_PyObject)"), self.windowreference)
         save_path = self.savePath
         if os.path.exists(save_path):
             shutil.rmtree(save_path)    
@@ -219,7 +226,10 @@ class StitchThread(QThread):
 
                     
                 progress += increment
-                self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 2, progress)
+                if self.increment != 0:
+                    self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, increment)
+                else:
+                    self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
                 end = time.time()
                 loopTime += [(end-start)]
             if broken:
@@ -254,7 +264,10 @@ class StitchThread(QThread):
         Qchi0_allphi = np.flipud(Qchi0_allphi)
         qname = self.save_Qchi(Q0, chi0, Qchi0_allphi, os.path.basename(fullname), save_path)
         progress += increment
-        self.emit(SIGNAL("bar(int, PyQt_PyObject)"), 2, progress)        
+        if self.increment != 0:
+            self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, increment)
+        else:
+            self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
         writeStitchProperties()
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject)"), self.windowreference,  loopTime)
         
@@ -309,3 +322,4 @@ def writeStitchProperties():
     for prawperty in properties:
         propw.write(prawperty)
     propw.close()
+    

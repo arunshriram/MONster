@@ -54,6 +54,9 @@ class QRoundProgressBar(QtGui.QWidget):
     def setMaximun(self, max):
         self.setRange(self.min, max)
 
+    def getValue(self):
+        return self.value
+
     def setValue(self, val):
         if self.value != val:
             if val < self.min:
@@ -63,6 +66,7 @@ class QRoundProgressBar(QtGui.QWidget):
             else:
                 self.value = val
             self.update()
+            
 
     def setNullPosition(self, position):
         if position != self.nullPosition:
