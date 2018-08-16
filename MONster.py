@@ -319,6 +319,7 @@ class MONster(QTabWidget):
         
         self.saveQueueButton.clicked.connect(lambda: mq.saveQueue(self))
       
+        self.loadQueueButton.clicked.connect(lambda: mq.loadQueue(self))
         def doubleclick():
             row = self.queue.currentRow()
             if len(self.macroQueue) > 0:

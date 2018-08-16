@@ -1642,16 +1642,10 @@ def saveQueue(self):
     if len(self.macroQueue) <= 0:
         self.addToConsole("No queue to save!")
         return
-    i = 1
-    newdict = {"Process": i, "filename" : self.macroQueue[0].getFilename(), "dict": self.macroQueue[0].getMacroDict()}
     dict_list = []
-    dict_list.append(newdict)
-    for i in range(1, len(self.macroQueue)):
-        newdict["Process"] = i + 1
-        newdict["filename"] = self.macroQueue[i].getFilename()
-        newdict["dict"] = self.macroQueue[i].getMacroDict()
+    for i in range(0, len(self.macroQueue)):
+        newdict = {"Process": i + 1, "filename" : self.macroQueue[i].getFilename(), "dict": self.macroQueue[i].getMacroDict()}        
         dict_list.append(newdict)
-        fileName = QFileDialog.getSaveFileName(self, 'Save your new macro!', name)
         
     fname = str(QFileDialog.getSaveFileName(self, "Select the location you wish to save your queue", "queueList.json"))
 
@@ -1669,11 +1663,31 @@ def loadQueue(self):
     if fname == "":
         self.addToConsole("No queue list selected!")
         return
-    if len(self.macroQueue > 0):
+    if len(self.macroQueue) > 0:
         self.macroQueue = []
         while self.queue.count() > 0:
             self.queue.takeItem(0)
-    
+    with open(fname) as infile:
+        jsondata = json.load(infile)
+    for d in jsondata:
+        filename = ''
+        dicti = None
+        process = ""
+        for key, value in d.items():
+            if key == 'filename':
+                filename = value
+            elif key == "Process":
+                process = value
+            elif key == "dict":
+                dicti = value
+        macro = QListWidgetItem("Process %s: Added macro \"%s\"" % (process, os.path.basename(filename)))
+        self.queue.addItem(macro)
+        self.macroQueue.append(Macro(filename, dicti))
+    global curIndex
+    curIndex = 0
+        
+
+
 
 
 def calculateMacroQueueIncrement(self):
