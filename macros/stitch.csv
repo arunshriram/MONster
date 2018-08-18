@@ -1,6 +1,0 @@
-stitch,True
-workflow,False
-transform,False
-integrate,False
-s_data_source,/Users/arunshriram/Documents/SLAC Internship/MONster/Pilatus
-s_proc_dir,/Users/arunshriram/Documents/SLAC Internship/MONster/Pilatus/Processed_Stitch
