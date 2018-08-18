@@ -1,0 +1,7 @@
+i_data_source, /Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed_Transform_Process_1
+i_processed_loc, /Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed_Transform_Process_1/Processed_Integrate
+one_d_image, /Users/arunshriram/Documents/SLAC Internship/MONster/test/Processed_Transform_Process_1/Processed_Integrate/k5_022318_1_24x24_t45_0314_Qchi_1D.csv
+qmin, 1.0
+qmax, 6.0
+chimin, -20.0
+chimax, 20.0
