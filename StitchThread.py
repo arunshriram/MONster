@@ -2,14 +2,16 @@
 # into Q-Chi plots. Its main element is the class TransformThread, a thread that
 # runs parallel to the GUI.
 #
-# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
 from PyQt4.QtGui import *
@@ -75,8 +77,13 @@ class StitchThread(QThread):
     # has been correctly passed into StitchThread's __init__
     def beginStitch(self):
         loopTime = []
+        nonStitchedFiles = []
         fileList = sorted(glob.glob(os.path.join(self.dataPath, '*.mat')))
         numFiles = len(fileList)
+        if numFiles <= 0:
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Could not locate any files in specified directory.")
+            self.emit(SIGNAL("enableWidgets()"))
+            return
         mode = 2
         if self.increment != 0:
             increment = self.increment
@@ -104,7 +111,7 @@ class StitchThread(QThread):
         try:
             data = scipy.io.loadmat(firstfile)
         except:
-            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Error: Could not load the first scan file! Try checking your scan indices.")
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Error: Could not load the first scan file!")
 
             return
         Q1 = data['Q']
@@ -204,26 +211,29 @@ class StitchThread(QThread):
                             
                 #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Shape of Qchi2: %s" % str(np.shape(Qchi2)))
                 #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Qchi2 min: %d ; max: %d" % (np.min(Qchi2), np.max(Qchi2)))
-                
-                indq = np.where(Q0 > np.min(Q2) - 1 / (4 * rq))[0][0]
-                indchi = np.where(chi0 > (np.min(chi2) - (1 / (4 * rchi))))[0][0]
-                for n in range(lchiint):
-                    for m in range(lqint):
-                        if Qchi2[n][m] > 0 and (m + indq - 1) < lq0int:
-                            Qchi0raw[n + indchi - 1][m + indq - 1] = Qchi0raw[n + indchi - 1][m + indq - 1] + Qchi2[n][m]
-                            count[n + indchi - 1][m + indq - 1] += 1
-                #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
-                #self.emit(SIGNAL( "addToConsole(PyQt_PyObject)"), "Image %s: shape of Qchi0raw: %s, max is %s, min is %s" % (x, str(np.shape(Qchi0raw)), np.max(Qchi0raw), np.min(Qchi0raw)))
-                #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
-                with open("thisRun.txt", 'w') as runFile:
-                    runFile.write("s_data_source, " + str(self.dataPath) + "\n")
-                    runFile.write("s_processed_loc, " + str(self.savePath) + "\n")
-                    imageFilename = os.path.basename(fullname)
-                    i = imageFilename.find("scan")
-                    imageFilename = imageFilename[:i-1]                    
-                    name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
-                    runFile.write("stitch_image, " + name + ".png\n")
-
+                try:
+                    indq = np.where(Q0 > np.min(Q2) - 1 / (4 * rq))[0][0]
+                    indchi = np.where(chi0 > (np.min(chi2) - (1 / (4 * rchi))))[0][0]
+               
+                    for n in range(lchiint):
+                        for m in range(lqint):
+                            if Qchi2[n][m] > 0 and (m + indq - 1) < lq0int:
+                                Qchi0raw[n + indchi - 1][m + indq - 1] = Qchi0raw[n + indchi - 1][m + indq - 1] + Qchi2[n][m]
+                                count[n + indchi - 1][m + indq - 1] += 1
+                    #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
+                    #self.emit(SIGNAL( "addToConsole(PyQt_PyObject)"), "Image %s: shape of Qchi0raw: %s, max is %s, min is %s" % (x, str(np.shape(Qchi0raw)), np.max(Qchi0raw), np.min(Qchi0raw)))
+                    #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
+                    with open("thisRun.txt", 'w') as runFile:
+                        runFile.write("s_data_source, " + str(self.dataPath) + "\n")
+                        runFile.write("s_processed_loc, " + str(self.savePath) + "\n")
+                        imageFilename = os.path.basename(fullname)
+                        i = imageFilename.find("scan")
+                        imageFilename = imageFilename[:i-1]                    
+                        name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
+                        runFile.write("stitch_image, " + name + ".png\n")
+                except:
+                    nonStitchedFiles.append(os.path.basename(fullname))
+                    pass
                     
                 progress += increment
                 if self.increment != 0:
@@ -269,6 +279,11 @@ class StitchThread(QThread):
         else:
             self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
         writeStitchProperties()
+        self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "-----------------------------------------------------------")
+        if len(nonStitchedFiles) > 0:
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Files that were unable to be stitched: " + ', '.join(nonStitchedFiles))
+        else:
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "All files were successfully stitched!")
         self.emit(SIGNAL("finished(PyQt_PyObject, PyQt_PyObject)"), self.windowreference,  loopTime)
         
         
@@ -368,6 +383,10 @@ def writeStitchProperties():
             property_dict["chimax"] = "0"
         else:
             property_dict["chimax"] = Properties["chimax"]
+        if Properties.get("console_saving") is None:
+            property_dict["console_saving"] = "True"
+        else:
+            property_dict["console_saving"] = Properties["console_saving"]
         property_dict["detectors"] = detectors
     
 

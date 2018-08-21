@@ -2,14 +2,16 @@
 # into Q-Chi plots. Its main element is the class TransformThread, a thread that
 # runs parallel to the GUI.
 #
-# This is one of the six main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
 from PyQt4.QtCore import *
@@ -25,7 +27,6 @@ from image_loader import load_image
 from data_reduction_smooth import data_reduction
 from saveDimRedPack import save_Qchi
 from nearest_neighbor_cosine_distances import nearst_neighbor_distance
-from PIL import Image
 from scipy import signal
 import shutil
 ###############################################################
@@ -63,7 +64,11 @@ class TransformThread(QThread):
         self.abort_flag = False
         self.files_to_process = files_to_process
         self.windowreference = windowreference
-        self.curDetector = None
+        detector = str(self.windowreference.detector_combo.currentText())
+        for detect in self.windowreference.detectorList:
+            if detect.getName() == detector.split(', ')[0]:
+                self.curDetector = detect
+                break
         self.increment = increment
         try:
             if os.path.isdir(files_to_process[0]):
@@ -154,6 +159,9 @@ class TransformThread(QThread):
         progress = 0
         self.emit(SIGNAL("bar(int, PyQt_PyObject)"), mode, progress)
         self.emit(SIGNAL("resetTransform(PyQt_PyObject)"), self.windowreference) 
+        if self.curDetector is None:
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Could not resolve detector!")
+            return
         self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Using detector %s"% self.curDetector.getName())        
         save_path = str(self.processedPath)
         if os.path.exists(save_path):
@@ -177,7 +185,9 @@ class TransformThread(QThread):
             
             QApplication.processEvents()
             ########## Begin data reduction scripts ###########################
-            self.beginReduction(filePath) #QRange=QRange, ChiRange=ChiRange) # this is where the MAIN PROCESSING STUFF HAPPENS
+            error = self.beginReduction(filePath) #QRange=QRange, ChiRange=ChiRange) # this is where the MAIN PROCESSING STUFF HAPPENS
+            if error is None:
+                continue
             stage1int = time.time()
            
         
@@ -280,6 +290,10 @@ class TransformThread(QThread):
         ###### BEGIN PROCESSING IMAGE####################################################
         # import image and convert it into an array
         self.imArray = load_image(pathname.rstrip(), self.curDetector)
+        if self.imArray is None:
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Could not transform image, maybe it's because you're using the wrong detector.")
+            return
+        self.imArray = np.flipud(self.imArray)
 
         # data_reduction to generate Q-chi, Q
         Q, chi, cake, = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
@@ -288,6 +302,7 @@ class TransformThread(QThread):
         ###### SAVE PLOTS ###############################################################
         # save Qchi as a plot *.png and *.mat
         qname = save_Qchi(Q, chi, cake, fileRoot, save_path)
+        return 1
     
     # Uses pyFAI to integrate the tif file as a one dimensional plot
         
@@ -299,7 +314,7 @@ class TransformThread(QThread):
         s1 = int(self.imArray.shape[0])
         s2 = int(self.imArray.shape[1])
         self.imArray = signal.medfilt(self.imArray, kernel_size = 5)
-    
+        self.imArray = np.flipud(self.imArray)
         detector_mask = np.ones((s1,s2))*(self.imArray <= 0)
         p = pyFAI.AzimuthalIntegrator(wavelength=lamda)
     
@@ -376,6 +391,10 @@ def writeTransformProperties():
             property_dict["chimax"] = "0"
         else:
             property_dict["chimax"] = Properties["chimax"]
+        if Properties.get("console_saving") is None:
+            property_dict["console_saving"] = "True"
+        else:
+            property_dict["console_saving"] = Properties["console_saving"]
         property_dict["detectors"] = detectors
     
 

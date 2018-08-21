@@ -2,20 +2,21 @@
 # as well as peak fitting. Its main element is the class IntegrateThread, a thread that
 # runs parallel to the GUI.
 #
-# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import pyFAI, shutil
-from PIL import Image
 from pyqtgraph import *
 import numpy as np
 import scipy.io
@@ -265,6 +266,10 @@ def writeIntegrateProperties():
             property_dict["stitch_image"] = ""
         else:
             property_dict["stitch_image"] = Properties["stitch_image"]
+        if Properties.get("console_saving") is None:
+            property_dict["console_saving"] = "True"
+        else:
+            property_dict["console_saving"] = Properties["console_saving"]
         property_dict["detectors"] = detectors
 
         with open("Properties.csv", 'wb') as prop:

@@ -1,14 +1,16 @@
 # This file is the main file for the GUI that transforms, stitches, and integrates detector data into 
 # Q-chi plots, stitched plots, and one dimensional graphs with peak fitting capabilities. 
 #
-# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
 #
@@ -36,6 +38,7 @@ from IntegrateThread import *
 from StitchThread import *
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+import HelpDialog
 
 # This class defines the Detector window in the menu.
 class DetectorEditor(QWidget):
@@ -209,12 +212,12 @@ class DetectorEditor(QWidget):
 class MONster(QTabWidget):
     def __init__(self):
         QTabWidget.__init__(self)
- 
+        self.write_console = True
         self.macroQueue = [] # list of macros for the queue tab
         self.fileProcessedCount = 0
         self.lineEditStyleSheet ="QLineEdit { border-radius: 4px;  color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); border-style:outset; border-width:4px;  border-radius: 4px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } "
         self.textStyleSheet = "QLabel {background-color : rgb(29, 30, 50); color: white; }"
-        self.current_user = getpass.getuser()
+        self.help_dialog = None
         screenShape = QDesktopWidget().screenGeometry()
         self.imageWidth = screenShape.height()/2.5
         mt.generateTransformWidgets(self) 
@@ -228,16 +231,14 @@ class MONster(QTabWidget):
         self.queueTab = QWidget()
         self.editor = mq.MacroEditor(self) # reference to the queue macro editor
         self.processDone = True # To check if current process in the macro queue is over
-        self.transformThread = TransformThread(self, None, None, None, None, 0)  # initialize the transform thread
-        self.integrateThread = IntegrateThread(self, None, None, None, None) # initialize the integrate thread
-        self.stitchThread = StitchThread(self, None, None, None) # initialize the stitch thread        
+       
         count = 0
         with open("Properties.csv", 'rb') as p:
             reader = csv.reader(p)
             prop = dict(reader)
             for k,v in prop.items():
                 count += 1      
-        if count < 15:
+        if count < 16:
             resetProperties()
             message = QLabel("Properties.py was found corrupted, so a new one was generated. Please restart MONster.")
             self.win = QWidget()
@@ -257,7 +258,9 @@ class MONster(QTabWidget):
        
                             
         self.detectorWindow = DetectorEditor(self)
-        
+        self.transformThread = TransformThread(self, None, None, None, None, 0)  # initialize the transform thread
+        self.integrateThread = IntegrateThread(self, None, None, None, 0) # initialize the integrate thread
+        self.stitchThread = StitchThread(self, None, None, 0) # initialize the stitch thread              
         self.updateUi()
         
     # Generates layouts and sets connections between buttons and functions
@@ -539,22 +542,31 @@ class MONster(QTabWidget):
     
     # What should be done after a thread is finished
     def done(self, loopTime, stage1Time, stage2Time):
-        avgTime = np.mean(loopTime)
-        maxTime = np.max(loopTime)
-        avg1 = np.mean(stage1Time)
-        avg2 = np.mean(stage2Time)
-        max1 = np.max(stage1Time)
-        max2 = np.max(stage2Time)
-        finishedMessage = ''
-        finishedMessage += ('====================================================\n')
-        finishedMessage += ('====================================================\n')
-        finishedMessage += ('Files finished processing\n')
-        finishedMessage += ('-----Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avgTime, maxTime))
-        finishedMessage += ('-----Stage1: Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avg1, max1))
-        finishedMessage += ('-----Stage2: Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avg2, max2))
-        finishedMessage += ('-----Total Time Elapsed {:4f}s\n'.format(np.sum(loopTime)))
-        finishedMessage += ('====================================================\n')
-        finishedMessage += ('====================================================')        
+        try:
+            avgTime = np.mean(loopTime)
+            maxTime = np.max(loopTime)
+            avg1 = np.mean(stage1Time)
+            avg2 = np.mean(stage2Time)
+            max1 = np.max(stage1Time)
+            max2 = np.max(stage2Time)
+            finishedMessage = ''
+            finishedMessage += ('====================================================\n')
+            finishedMessage += ('====================================================\n')
+            finishedMessage += ('Files finished processing\n')
+            finishedMessage += ('-----Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avgTime, maxTime))
+            finishedMessage += ('-----Stage1: Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avg1, max1))
+            finishedMessage += ('-----Stage2: Avg {:.4f}s / file, max {:.4f}.s / file\n'.format(avg2, max2))
+            finishedMessage += ('-----Total Time Elapsed {:4f}s\n'.format(np.sum(loopTime)))
+            finishedMessage += ('====================================================\n')
+            finishedMessage += ('====================================================')     
+        except:
+            finishedMessage = ''
+            finishedMessage += ('====================================================\n')
+            finishedMessage += ('====================================================\n')
+            finishedMessage += ('Files finished processing\n')
+            finishedMessage += ('-----Total Time Elapsed {:4f}s\n'.format(np.sum(loopTime)))
+            finishedMessage += ('====================================================\n')
+            finishedMessage += ('====================================================\n')            
         #QMessageBox.information(self, "Done!", finishedMessage)
         self.addToConsole(finishedMessage)
         self.console.moveCursor(QTextCursor.End)
@@ -585,6 +597,12 @@ class MONster(QTabWidget):
         self.qconsole.moveCursor(QTextCursor.End)
         self.stitch_console.moveCursor(QTextCursor.End)
         QApplication.processEvents()
+        if self.write_console:
+            if not os.path.isdir("console_messages"):
+                os.makedirs("console_messages")
+            with open("console_messages/console_%s.txt" % datetime.datetime.today().strftime('%Y-%m-%d')
+    , 'a') as console:
+                console.write(message + '\n')
    
     # Loads transform calibration information based on the filename the user selects
     def loadCalibration(self):
@@ -664,6 +682,8 @@ class MONster(QTabWidget):
             pixmap = QPixmap(filename)
             if filename == "":
                 pixmap = QPixmap("images/SLAC_LogoSD.png")
+                self.addToConsole("Could not load Qchi image.")
+                
             self.raw_image.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))        
         except:
             self.addToConsole("Could not load Qchi image.")
@@ -755,33 +775,53 @@ class Menu(QMainWindow):
         self.updateUi()
         
     def updateUi(self):
+        self.help_dialog = None
         bar = self.menuBar()
         file = bar.addMenu('File')
         edit = bar.addMenu("Edit")
-        home_action = QAction('Home', self)
+        help = bar.addMenu("Click me for answers to your problems")
+        console_action = QAction('Toggle Console Text File Saving', self)
+        
         
         save_action = QAction('Save', self)
         save_action.setShortcut('Ctrl+S')
         #saveplot_action = QAction('Save Plot Data', self)
         #saveplot_action.setShortcut('Ctrl+Alt+S')
         clear_prop = QAction("Clear previous run information", self)
-        
+        help_a = QAction("Open the help dialog!", self)
         quit_action = QAction('Quit', self)
         quit_action.setShortcut('Ctrl+Q')
+    
 
         detectors = QAction("Add or remove detectors", self)
         
         
-        file.addAction(home_action)
-        file.addAction(save_action)
+        file.addAction(console_action)
+        #file.addAction(save_action)
         edit.addAction(clear_prop)
         edit.addAction(detectors)
         #file.addAction(saveplot_action)
         file.addAction(quit_action)
-        
+        help.addAction(help_a)
         
         quit_action.triggered.connect(lambda: qApp.quit())
         clear_prop.triggered.connect(self.clearProperties)
+        help_a.triggered.connect(self.openHelpDialog)
+        def console():
+            self.form_widget.write_console = not self.form_widget.write_console
+            with open ("Properties.csv", 'rb') as p:
+                reader = csv.reader(p)
+                prop = dict(reader)
+            if "True" in prop["console_saving"]:
+                prop["console_saving"] = "False"
+            else:
+                prop["console_saving"] = "True"
+            with open("Properties.csv", 'wb') as p:
+                writer = csv.writer(p)
+                for key, val in prop.items():
+                    writer.writerow([key, val])
+
+        console_action.triggered.connect(console)
         def stupidpoopypants():
             self.form_widget.detectorWindow.show()
             self.form_widget.detectorWindow.raise_()
@@ -793,6 +833,14 @@ class Menu(QMainWindow):
         self.show()
         self.raise_()
         self.setFixedSize(self.minimumSizeHint())
+        
+    def setHelpDialog(self, hd):
+        self.help_dialog = hd
+        self.form_widget.help_dialog = hd
+    def openHelpDialog(self):
+        self.help_dialog.show()
+        self.help_dialog.raise_()
+
         
     def clearProperties(self):
         try:
@@ -815,6 +863,7 @@ class Menu(QMainWindow):
                 prop["qmax"] = ""
                 prop["chimin"] = ""
                 prop["chimax"] = ""
+                prop["console_saving"] = "True"
                 prop["detectors"] = "['PILATUS3 X 100K-A, Width: 487, Height: 195', 'PILATUS3 X 200K-A, Width: 487, Height: 407', 'PILATUS3 X 300K, Width: 487, Height: 619', 'PILATUS3 X 300K-W, Width: 1475, Height: 195', 'PILATUS3 X 1M, Width: 981, Height: 1043', 'PILATUS3 X 2M, Width: 1485, Height: 1679', 'PILATUS3 X 6M, Width: 2463, Height: 2527', 'MX225-HE, Width: 6144, Height: 6144']"
                 for key, value in prop.items():
                     writer.writerow([key, value])
@@ -839,6 +888,7 @@ def resetProperties():
             prop["qmax"] = ""
             prop["chimin"] = ""
             prop["chimax"] = ""
+            prop["console_saving"] = "True"
             prop["detectors"] = "['PILATUS3 X 100K-A, Width: 487, Height: 195', 'PILATUS3 X 200K-A, Width: 487, Height: 407', 'PILATUS3 X 300K, Width: 487, Height: 619', 'PILATUS3 X 300K-W, Width: 1475, Height: 195', 'PILATUS3 X 1M, Width: 981, Height: 1043', 'PILATUS3 X 2M, Width: 1485, Height: 1679', 'PILATUS3 X 6M, Width: 2463, Height: 2527', 'MX225-HE, Width: 6144, Height: 6144']"
             for key, value in prop.items():
                 writer.writerow([key, value])
@@ -863,6 +913,8 @@ def propertiesAreClear():
 def main():
     app = QApplication(sys.argv)
     menu = Menu()
+    hd = HelpDialog.HelpDialog(menu.form_widget)
+    menu.setHelpDialog(hd)
     sys.exit(app.exec_())
     
 if __name__ == '__main__':

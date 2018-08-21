@@ -1,0 +1,76 @@
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0314.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0314.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.7842s / file, max 10.7842.s / file
+-----Stage1: Avg 10.7841s / file, max 10.7841.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.784161s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0314.tif completed
+No previous run information found!
+Could not load integrated graph.
+Could not load Qchi image.
+Could not load integrated graph.
+Could not load Qchi image.
+Could not load stitched image.
+Could not load integrated graph.
+Did not select a data source.
+Could not load Qchi image.
+Could not load stitched image.
+Could not load integrated graph.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0314.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0314.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 11.0190s / file, max 11.0190.s / file
+-----Stage1: Avg 11.0189s / file, max 11.0189.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 11.019034s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0314.tif completed
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0314.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0314.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 11.3675s / file, max 11.3675.s / file
+-----Stage1: Avg 11.3674s / file, max 11.3674.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 11.367470s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0314.tif completed
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.

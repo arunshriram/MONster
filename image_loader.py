@@ -5,7 +5,7 @@ version: 1.1
 """
 import fabio
 import numpy as np
-import os
+import os, traceback
 
 
 def load_image(imageFullname, detector=""):
@@ -28,9 +28,9 @@ def load_image(imageFullname, detector=""):
             arr.shape = (detector.getHeight(), detector.getWidth())
             #arr.shape = (195, 1475)
             imArray = np.array(arr)
+            #imArray =  np.flipud(imArray) # images turn out upside down
         except:    #raw requires prompting for dimensions, hard code for now
-            arr.shape = (3888, 3072)
-            imArray = np.array(arr)
+            return
             
         
     return imArray

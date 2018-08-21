@@ -7,7 +7,6 @@ Created on Mon Jun 13
 """
 
 import pyFAI
-from PIL import Image
 import numpy as np
 from scipy import signal
 import time

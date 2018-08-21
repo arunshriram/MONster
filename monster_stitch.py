@@ -1,12 +1,28 @@
-# 2018.07.26 16:07:07 PDT
-#Embedded file name: /Users/arunshriram/Documents/SLAC Internship/MONster/monster_stitch.py
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-import os, datetime, csv
-from ClickableLineEdit import ClickableLineEdit
-from StitchThread import *
-from QRoundProgressBar import QRoundProgressBar
-import monster_queueloader as mq
+# This file initializes the widgets and the layout for the stitch tab of the GUI. It interfaces
+# with the StitchThread to run the stitching processes.
+#
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
+#
+# Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
+# 
+# Author: Arun Shriram
+# Written for my SLAC Internship at SSRL
+# File Start Date: June 25, 2018
+# File End Date: August 31, 2018
+#
+#
+from PyQt4.QtGui import * # for the GUI
+from PyQt4.QtCore import * # for the GUI
+import os, datetime, csv # for file saving
+from ClickableLineEdit import ClickableLineEdit # for all the line edit fields
+from StitchThread import * # for stitch processing
+from QRoundProgressBar import QRoundProgressBar # for progress bar on stitch page
+import monster_queueloader as mq # for saving the stitch page as a macro
+
+# None -> None
+# Generates the widgets for the stitch tab.
 def generateStitchWidgets(self):
     self.stitchImage = QLabel()
     pixmap = QPixmap('images/SLAC_LogoSD.png')
@@ -81,6 +97,8 @@ def generateStitchWidgets(self):
 
     self.stitch_files_to_process = None
 
+# None -> QVBoxLayout
+# Generates the layout for the integrate tab.
 def generateStitchLayout(self):
     v_box = QVBoxLayout()
     imagebox = QHBoxLayout()
@@ -112,6 +130,7 @@ def generateStitchLayout(self):
     v_box.addWidget(self.stitch_console)
     return v_box
 
+# None -> None
 # Compiles the information on the current stitch tab page into a macro and adds it to the queue
 def addStitchCurrentToQueue(self):
     cur_time = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
@@ -128,9 +147,9 @@ def addStitchCurrentToQueue(self):
     QApplication.processEvents()
     self.addToConsole("Macro saved and added to queue!")
     
-
+# None -> int
 # Adds functionality to the stitch page "save macro" button; takes all the information currently
-# on the stitch page and compiles it into a macro to be loaded into the queue
+# on the stitch page and compiles it into a macro to be loaded into the queue. Returns an int if successfully saved.
 def saveStitchMacro(self, fileName=''):
     # CHECKING VALUES TO MAKE SURE EVERYTHING IS OKAY BEFORE MACRO CAN BE SAVED
     macrodict = {"workflow" : "False"}
@@ -191,6 +210,9 @@ def saveStitchMacro(self, fileName=''):
     self.addToConsole("Macro saved successfully!")
     return 1
 
+# None -> None
+# Begins stitch processing, parsing the relevant fields, making sure that the user has entered
+# all fields correctly, and then loading and starting the StitchThread
 def beginStitch(self):
     self.disableWidgets()
     self.stitch_console.moveCursor(QTextCursor.End)
@@ -204,7 +226,7 @@ def beginStitch(self):
     
     
     if not os.path.exists(str(self.images_select.text())):
-        self.addToConsole("Please select a data source!")
+        self.addToConsole("Please select a valid data source!")
         self.enableWidgets()
         return
     else:
@@ -227,8 +249,11 @@ def beginStitch(self):
     self.connect(self.stitchThread, SIGNAL("setImage(PyQt_PyObject, PyQt_PyObject)"), setStitchImage)
     self.connect(self.stitchThread, SIGNAL("resetStitch(PyQt_PyObject)"), resetStitch)
     self.connect(self.stitchThread, SIGNAL("incrementBar(PyQt_PyObject)"), self.incrementBar)
+    self.connect(self.stitchThread, SIGNAL("enableWidgets()"), self.enableWidgets)
     self.stitchThread.start()    
 
+# None -> None
+# Retreives and stores the data source path for stitch processing
 def stitchImageSelect(self):
     try:
         folderpath = str(QFileDialog.getExistingDirectory(directory=os.getcwd()))
@@ -239,7 +264,9 @@ def stitchImageSelect(self):
     except:
         self.addToConsole("Something went wrong when trying to open your directory.")
         return
-# What should be done after a stitch thread is finished
+
+# list -> None
+# Calculates the output message for what should be done after a stitch thread is finished
 def stitchDone(self, loopTime):
     avgTime = np.mean(loopTime)
     maxTime = np.max(loopTime)
@@ -259,27 +286,36 @@ def stitchDone(self, loopTime):
     self.stitchThread.stop()
     self.processDone = True
 
-# Adds the current stitched image to the stitch page.
+# string -> None
+# Adds the current stitched image to the stitch page, takes a filename for the image to display.
 def setStitchImage(self, filename):
     try:
         pixmap = QPixmap(filename)   
         if filename == "":
             pixmap = QPixmap("images/SLAC_LogoSD.png", "1")
+            self.addToConsole("Could not load stitched image.")
+            
         self.stitchImage.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))  
         QApplication.processEvents()
     except:
         self.addToConsole("Could not load stitched image.")
+        return
         
     
+# None -> None
+# Sets the processed file location for stitch
 def setStitchSaveLocation(self):
     path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files"))
     if path !='':
         self.stitch_saveLocation.setText(os.path.join(path, "Processed_Stitch"))
       
+# None -> None
+# Resets the stitch image to the SLAC Logo
 def resetStitch(self):
     setStitchImage(self, "images/SLAC_LogoSD.png")
     self.stitchbar.setValue(0)
     
+# string -> None
 # Takes a message as an argument and displays it to the screen as a message box     
 def displayError(self, message):
     message = QLabel(message)

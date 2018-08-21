@@ -1,29 +1,32 @@
 # This file initializes the widgets, layouts, and various functions necessary to run
 # the "integrate" tab in MONster.
 #
-# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
-from QRoundProgressBar import QRoundProgressBar
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from ClickableLineEdit import *
-import os, datetime
-import matplotlib 
+from QRoundProgressBar import QRoundProgressBar # the progress bar on the integrate tab
+from PyQt4.QtGui import * # for the GUI
+from PyQt4.QtCore import * # for the GUI
+from ClickableLineEdit import * # for all the line edit fields
+import os, datetime 
+import matplotlib  # to graph the integrate data 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from IntegrateThread import *
-import pyqtgraph as pg
-import csv
-import numpy as np
-import monster_queueloader as mq
+from IntegrateThread import * # to interface with the integrate processing
+import pyqtgraph as pg # to graph the integrate data
+import csv # to save integrate data
+import numpy as np # to graph and save integrate data
+import monster_queueloader as mq # to consolidate all the information on the integrate tab as a macro
+
 # Adds functionality to right-clicking the graph (autoscaling it to bring it to view) and to dragging the mouse (adds a rectangle and zooms into whatever's in that rectangle)
 class CustomViewBox(pg.ViewBox):
     def __init__(self, *args, **kwds):
@@ -42,7 +45,7 @@ class CustomViewBox(pg.ViewBox):
             pg.ViewBox.mouseDragEvent(self, ev)
             
 
-
+# None -> None
 # Generates the widgets for the integrate tab.
 def generateIntegrateWidgets(self):
     self.vb = CustomViewBox()
@@ -160,7 +163,8 @@ def generateIntegrateWidgets(self):
     self.integrate_addToQueueButton.resize(self.integrate_addToQueueButton.sizeHint().width(), self.integrate_addToQueueButton.sizeHint().height())
 
     
-    
+# ndarray ndarray tuple tuple -> None
+# Takes the specified q array, the integrated cake array and the q range and chi range to plot with pyqtgraph
 def plot1dGraph(self, qArray, integ_cake, QRange, ChiRange):
     self.one_d_graph.clear()
     QApplication.processEvents()
@@ -178,6 +182,9 @@ def plot1dGraph(self, qArray, integ_cake, QRange, ChiRange):
     # time.sleep(.2)
     QApplication.processEvents()
 
+# tuple string ndarray ndarray tuple -> None
+# Takes a tuple of the image path name and the base image name, the save path, q array, integrated cake 
+# array, and q and chi ranges to save the integrated graph as a numpy image
 def save1dGraph(self, pathnames, processedPath, qArray, integ_cakeArray, ranges):
     #time.sleep(.2)
     imagename = pathnames[0]
@@ -196,7 +203,7 @@ def save1dGraph(self, pathnames, processedPath, qArray, integ_cakeArray, ranges)
     plt.ylabel('Intensity')
     #plt.xlim((0.7, 6.4))
 
-    plt.savefig(imagename)
+    plt.savefig(imagename, dpi=300)
     
     plt.close()
     
@@ -210,7 +217,7 @@ def save1dGraph(self, pathnames, processedPath, qArray, integ_cakeArray, ranges)
             writer.writerow([qArray[index], integ_cakeArray[index]])
             index += 1
         
-    
+# string -> None
 # Takes a CSV filename and displays the 1D image specified by the filename on the GUI.
 def set1DImage(self, filename):
     try:
@@ -247,9 +254,9 @@ def set1DImage(self, filename):
         QApplication.processEvents()
     except:
         traceback.print_exc()
-        self.addToConsole("Could not load integrated image.")
+        self.addToConsole("Could not load integrated graph.")
         
-
+# None -> QVBoxLayout
 # Generates the layout for the integrate tab.
 def generateIntegrateLayout(self):
     v_box1 = QVBoxLayout()
@@ -307,6 +314,7 @@ def generateIntegrateLayout(self):
     layout.addWidget(self.miconsole)
     return layout
 
+# None -> None
 # Begins integration processing, parsing the relevant fields, making sure that the user has entered
 # all fields correctly, and then loading and starting the IntegrateThread
 def integrateThreadStart(self):
@@ -326,9 +334,7 @@ def integrateThreadStart(self):
     self.addToConsole('********** Beginning Integrate Processing... ***********')
     self.addToConsole('********************************************************')
     QApplication.processEvents()
-    # grab monitor folder
-    #root = Tkinter.Tk()
-    #root.withdraw()
+    # checking q an chi range values to see if they're appropriate
     try:
         q1 = float(str(self.q_min.text()))
         q2 = float(str(self.q_max.text()))
@@ -340,12 +346,6 @@ def integrateThreadStart(self):
         self.enableWidgets()
         return
     
-    dataPath = str(self.int_data_source.text())
-    if  os.path.isdir(dataPath) and self.int_data_source_check.isChecked():
-        self.i_files_to_process = [dataPath]        
-        
-    self.addToConsole('Folder to process: ' + dataPath)
-    self.addToConsole('')        
     self.QRange = (float(str(self.q_min.text())), float(str(self.q_max.text())))
     self.ChiRange = (float(str(self.chi_min.text())), float(str(self.chi_max.text())))    
     if abs(self.QRange[1]-self.QRange[0]) < .01:
@@ -355,7 +355,17 @@ def integrateThreadStart(self):
     if abs(self.ChiRange[1] - self.ChiRange[0]) < 0.1:
         self.addToConsole("Please select a more reasonable Chi range.")
         self.enableWidgets()
-        return        
+        return      
+
+    dataPath = str(self.int_data_source.text())
+    if  os.path.isdir(dataPath) and self.int_data_source_check.isChecked():
+        self.i_files_to_process = [dataPath]        
+        
+    self.addToConsole('Folder to process: ' + dataPath)
+    self.addToConsole('')        
+  
+
+    # initialize integrate thread
     
 
     self.integrateThread = IntegrateThread(self, str(self.int_processed_location.text()), self.i_files_to_process, (self.QRange, self.ChiRange), 0)
@@ -374,6 +384,7 @@ def integrateThreadStart(self):
     self.disableWidgets()
     self.integrateThread.start()
     
+# None -> None
 # Compiles the information on the current integrate tab page into a macro and adds it to the queue
 def addIntegrateCurrentToQueue(self):
     cur_time = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
@@ -391,9 +402,9 @@ def addIntegrateCurrentToQueue(self):
     QApplication.processEvents()
     self.addToConsole("Macro saved and added to queue!")
 
-
+# string  -> int
 # Adds functionality to the integrate page "save macro" button; takes all the information currently
-# on the integrate page and compiles it into a macro to be loaded into the queue
+# on the integrate page and compiles it into a macro to be loaded into the queue. Returns an int if successfully saved.
 def saveIntegrateMacro(self, fileName=''):
     # CHECKING VALUES TO MAKE SURE EVERYTHING IS OKAY BEFORE MACRO CAN BE SAVED
     macrodict = {"workflow" : 'False'}
@@ -490,6 +501,8 @@ def saveIntegrateMacro(self, fileName=''):
     self.addToConsole("Macro saved successfully!")
     return 1
         
+# None -> None
+# Retrieves and stores the selected data source for integration.
 def getIntDataSourceDirectoryPath(self):
     if self.int_data_source_check.isChecked():
         try:
@@ -519,16 +532,20 @@ def getIntDataSourceDirectoryPath(self):
     
     
 
-
+# None -> None
+# Sets the processed location path for integration
 def setIntProcessedLocation(self):
     path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text())))
     if path !='':
         self.int_processed_location.setText(os.path.join(path, "Processed_Integrate"))
+
+# None -> None
+# Resets the integrate graph
 def resetIntegrate(self):
-    set1DImage(self, "images/SLAC_LogoSD.png")
+    self.one_d_graph.clear()
     self.int_bar.setValue(0)
     
-    
+# string -> None
 # Takes a message as an argument and displays it to the screen as a message box     
 def displayError(self, message):
     message = QLabel(message)

@@ -1,23 +1,26 @@
 # This file initializes the widgets and the layout for the transform tab of the GUI. It interfaces
 # with the TransformThread to run the transform processes.
 #
-# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
-from QRoundProgressBar import QRoundProgressBar
-from PyQt4.QtGui import *
-from ClickableLineEdit import *
-from monster_queueloader import *
-from MONster import displayError
-import monster_queueloader as mq
+from QRoundProgressBar import QRoundProgressBar # for the progress bar on the transform page
+from PyQt4.QtGui import * # for the GUI
+from ClickableLineEdit import * # for all the line edit fields
+from monster_queueloader import * # for saving the transform page as a macro
+from MONster import displayError # to display errors as message boxes
+import monster_queueloader as mq  # for saving the transform page as a macro
 
+# None -> None
 # Generates the widgets for the transform tab
 def generateTransformWidgets(self):
     pixmap = QPixmap('images/SLAC_LogoSD.png')
@@ -170,10 +173,11 @@ def generateTransformWidgets(self):
     # for detector in self.detectorList:
     #     self.detector_combo.addItem(str(detector))
         
-def addDetectorToList(lst, name, width, height):
-    det = Detector(name, width, height)
-    lst.append(det)
+# def addDetectorToList(lst, name, width, height):
+#     det = Detector(name, width, height)
+#     lst.append(det)
 
+# None -> QVBoxLayout()
 # Returns the layout for the transform tab
 def generateTransformLayout(self):
     h_box1 = QHBoxLayout()
@@ -256,7 +260,7 @@ def generateTransformLayout(self):
     v_box.addWidget(self.console)
     return v_box
 
-
+# None -> None
 # Compiles the information on the current transform tab page into a macro and adds it to the queue
 def addTransformCurrentToQueue(self):
     cur_time = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
@@ -273,9 +277,9 @@ def addTransformCurrentToQueue(self):
     QApplication.processEvents()
     self.addToConsole("Macro saved and added to queue!")
     
-
+# string -> int
 # Adds functionality to the transform page "save macro" button; takes all the information currently
-# on the transform page and compiles it into a macro to be loaded into the queue
+# on the transform page and compiles it into a macro to be loaded into the queue. Returns an int if successfully saved.
 def saveTransformMacro(self, fileName=''):
     # CHECKING VALUES TO MAKE SURE EVERYTHING IS OKAY BEFORE MACRO CAN BE SAVED
     macrodict = {"workflow" : "False"}
@@ -356,8 +360,9 @@ def saveTransformMacro(self, fileName=''):
     self.addToConsole("Macro saved successfully!")
     return 1
     
-
-# Begins the transform thread
+# None -> None
+# Begins transform processing, parsing the relevant fields, making sure that the user has entered
+# all fields correctly, and then loading and starting the TransformThread
 def transformThreadStart(self):
     # Check if the user has correctly selected either a folder or a group of files
     
@@ -421,6 +426,8 @@ def transformThreadStart(self):
     self.connect(self.transformThread, SIGNAL("incrementBar(PyQt_PyObject)"), self.incrementBar)
     self.transformThread.start()
         
+# None -> None
+# Resets the transform image to the SLAC Logo
 def resetTransform(self):
     self.setRawImage("images/SLAC_LogoSD.png")
     self.bar.setValue(0)
