@@ -73,7 +73,9 @@ class IntegrateThread(QThread):
            
             files = fileList[0:10000000000000000]
         else:
-            files = self.files_to_process
+            files = [x for x in self.files_to_process if x.endswith('.mat')]
+
+
         loopTime = []
         stage1Time = []
         stage2Time = []
@@ -131,10 +133,10 @@ class IntegrateThread(QThread):
     
             save_path = str(self.processedPath)
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
-            with open("thisRun.txt", 'w') as runFile:
+            with open("Bookkeeping/thisRun.txt", 'w') as runFile:
                 runFile.write("i_data_source, " + str(self.dataPath)+'\n')
                 runFile.write("i_processed_loc, " + str(self.processedPath) + '\n')
-                name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_1D.csv')                
+                name = os.path.join(os.path.join(save_path, "Integrated_CSVs"), os.path.splitext(imageFilename)[0]+'_1D.csv')                
                 self.emit(SIGNAL("set1DImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
                 runFile.write("one_d_image, " + name + '\n')
                 QApplication.processEvents()
@@ -186,7 +188,9 @@ class IntegrateThread(QThread):
         nan_integ_cake = np.nanmean(nanCakeArray, axis=0)
         masked_integ_cake = np.nanmean(to_int, axis=0)
         imageFilename = os.path.basename(pathname.rsplit('.', 1)[0])
-        filename = os.path.join(self.processedPath, os.path.splitext(imageFilename)[0]+'_1D.png') 
+        if not os.path.exists(os.path.join(self.processedPath, "Integrated_Images")):
+            os.makedirs(os.path.join(self.processedPath, "Integrated_Images"))  
+        filename = os.path.join(os.path.join(self.processedPath, "Integrated_Images"), os.path.splitext(imageFilename)[0]+'_1D.png') 
         self.emit(SIGNAL("plot1dGraph(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.windowreference, qArray[qmin_ind: qmax_ind], masked_integ_cake, self.QRange, self.ChiRange)
         time.sleep(.3)
         self.emit(SIGNAL("save1dGraph(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), self.windowreference, (filename, imageFilename), self.processedPath, qArray[qmin_ind: qmax_ind], masked_integ_cake, (self.QRange, self.ChiRange))
@@ -222,12 +226,12 @@ def writeIntegrateProperties():
     try:
         properties = []
 
-        with open('Properties.csv', 'rb') as prop:
+        with open('Bookkeeping/Properties.csv', 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         detectors = Properties["detectors"]
 
-        with open("thisRun.txt", 'r') as thisrun:
+        with open("Bookkeeping/thisRun.txt", 'r') as thisrun:
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
@@ -272,7 +276,7 @@ def writeIntegrateProperties():
             property_dict["console_saving"] = Properties["console_saving"]
         property_dict["detectors"] = detectors
 
-        with open("Properties.csv", 'wb') as prop:
+        with open("Bookkeeping/Properties.csv", 'wb') as prop:
             writer = csv.writer(prop)
             for key, value in property_dict.items():
                 writer.writerow([key, value])    

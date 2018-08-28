@@ -1,0 +1,10 @@
+t_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+workflow,True
+t_data_source,['/Users/arunshriram/Documents/SLAC Internship/test_data/k5']
+t_calib_source,/Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+detector_type,PILATUS3 X 100K-A
+transform,True
+qmax,6.0
+qmin,1.0
+chimax,20.0
+chimin,-20.0

@@ -64,9 +64,17 @@ def generateIntegrateWidgets(self):
     self.i_files_to_process = []
     self.miconsole = QTextBrowser()
     self.miconsole.setMinimumHeight(150)
-    self.miconsole.setMaximumHeight(300)
+    self.miconsole.setMaximumHeight(400)
     self.miconsole.moveCursor(QTextCursor.End)
 
+    self.int_folder_button = QPushButton("Select a folder")
+    self.int_folder_button.setFixedSize(self.int_folder_button.sizeHint().width(), self.int_folder_button.sizeHint().height())
+    self.int_folder_button.setStyleSheet("background-color: rgb(159, 97, 100);")
+    
+    self.int_file_button = QPushButton("Select one or more files")
+    self.int_file_button.setFixedSize(self.int_file_button.sizeHint().width(), self.int_file_button.sizeHint().height())
+    self.int_file_button.setStyleSheet("background-color: rgb(248, 222, 189);")
+    
     self.miconsole.setFont(QFont("Avenir", 14))
     self.miconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")               
     self.q_min_label = QLabel('Q Min:')
@@ -114,17 +122,14 @@ def generateIntegrateWidgets(self):
     self.int_data_source.setStyleSheet(self.lineEditStyleSheet)
     
     self.int_data_source.setFixedWidth(580)
-    self.int_data_folder_button = QPushButton()
-    self.int_data_folder_button.setIcon(QIcon('images/folder_select.png'))
-    self.int_data_folder_button.setIconSize(QSize(25, 25))
-    self.int_data_folder_button.setFixedSize(25, 25)
-    self.int_data_folder_button.setStyleSheet('border: none;')
-    self.int_data_source_check = QCheckBox("I'm going to select a folder")
-    self.int_data_source_check.setStyleSheet("QCheckBox {background-color : rgb(29, 30, 50); color: white; }")
+    self.int_data_folder = QLabel()
+    self.int_data_folder.setFixedSize(25, 25)    
+    self.int_data_folder.setPixmap(QPixmap('images/folder_select.png').scaled(self.int_data_folder.sizeHint().width(), self.int_data_folder.sizeHint().height()))
+    self.int_data_folder.setStyleSheet('border: none;')
+    self.int_data_label.setText("Current data source: (folder)")
     
-    self.int_data_source_check.setChecked(True)
     
-    self.int_processed_location_label = QLabel("Current location for processed files:")
+    self.int_processed_location_label = QLabel("Destination for processed files:")
     self.int_processed_location_label.setStyleSheet(self.textStyleSheet)
     self.int_processed_location = ClickableLineEdit(str(self.int_data_source.text())  + "/Processed_Integrate")
     self.int_processed_location.setStyleSheet(self.lineEditStyleSheet)
@@ -133,8 +138,8 @@ def generateIntegrateWidgets(self):
     self.int_processed_location_folder_button = QPushButton()
     self.int_processed_location_folder_button.setIcon(QIcon('images/folder_select.png'))
     self.int_processed_location_folder_button.setIconSize(QSize(25, 25))
-    self.int_processed_location_folder_button.setFixedSize(25, 25)
-    self.int_processed_location_folder_button.setStyleSheet('border: none;')    
+    self.int_processed_location_folder_button.setFixedSize(35, 35)
+    self.int_processed_location_folder_button.setStyleSheet('background-color: rgba(34, 200, 157, 100)');     
           
     
     
@@ -206,8 +211,10 @@ def save1dGraph(self, pathnames, processedPath, qArray, integ_cakeArray, ranges)
     plt.savefig(imagename, dpi=300)
     
     plt.close()
-    
-    txtfilename = os.path.join(processedPath, os.path.splitext(pathname)[0]+'_1D.csv') 
+    path = os.path.join(processedPath, "Integrated_CSVs")
+    if not os.path.exists(path):
+        os.makedirs(path)
+    txtfilename = os.path.join(os.path.join(processedPath, "Integrated_CSVs"), os.path.splitext(pathname)[0]+'_1D.csv') 
      
     with open(txtfilename, 'wb') as csvwriter:
         writer = csv.writer(csvwriter, delimiter=',')
@@ -292,10 +299,18 @@ def generateIntegrateLayout(self):
     h_box2 = QHBoxLayout()
     h_box2.addWidget(self.int_data_source)
     #h_box2.addStretch()
-    h_box2.addWidget(self.int_data_folder_button)
-    h_box2.addWidget(self.int_data_source_check)
+    h_box2.addWidget(self.int_data_folder)
+    h_box2.addWidget(self.int_folder_button)
+    h_box2.addWidget(self.int_file_button)
     h_box2.addStretch()
     layout.addWidget(self.int_data_label)
+    x = QLabel("Data source directory:")
+    x.setStyleSheet("color: white;")
+    line = QFrame()
+    line.setFrameShape(QFrame.HLine)
+    line.setStyleSheet("color: white;")
+    layout.addWidget(line)
+    layout.addWidget(x)
     layout.addLayout(h_box2)
     
     h_box7 = QHBoxLayout()
@@ -319,20 +334,60 @@ def generateIntegrateLayout(self):
 # all fields correctly, and then loading and starting the IntegrateThread
 def integrateThreadStart(self):
 
-
-
-    if not self.int_data_source_check.isChecked() and os.path.isdir(self.i_files_to_process[0]):
-        self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
-        self.enableWidgets()
+    if self.transformThread.isRunning() or self.stitchThread.isRunning():
+        self.addToConsole("Stop! You're giving me too much to do! Cannot run multiple processes at once.")
         return
-        
-    self.disableWidgets()
+
+    #if not self.int_data_source_check.isChecked() and os.path.isdir(self.i_files_to_process[0]):
+        #self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
+        #self.enableWidgets()
+        #return
+    if self.i_files_to_process == []:
+        self.i_files_to_process = [str(self.int_data_source.text())]
+        self.int_data_label.setText("Current data source: (folder)")
     self.miconsole.moveCursor(QTextCursor.End)
     QApplication.processEvents()
     self.console.clear()
     self.addToConsole('********************************************************')
     self.addToConsole('********** Beginning Integrate Processing... ***********')
     self.addToConsole('********************************************************')
+    save_path = str(self.int_processed_location.text())
+    self.overwrite = False
+    self.clicked = False
+    if os.path.exists(save_path):
+        message = QLabel("Warning! This processed file destination already exists! Are you sure you want to overwrite it?")
+        self.win = QWidget()
+        self.win.setWindowTitle('Careful!')
+        self.yes = QPushButton('Yes')
+        self.no = QPushButton('No')
+        self.ly = QVBoxLayout()
+        self.ly.addWidget(message)
+        h = QHBoxLayout()
+        h.addWidget(self.yes)
+        h.addWidget(self.no)
+        self.ly.addLayout(h)
+        self.win.setLayout(self.ly)    
+        def n():
+            self.clicked = True
+            self.win.close()
+            self.raise_()        
+        self.no.clicked.connect(n)
+       
+        def y():
+            self.overwrite = True
+            self.clicked = True
+            self.win.close()
+            self.raise_()
+        self.yes.clicked.connect(y)
+        self.win.show()
+        self.win.raise_()
+        while not self.clicked:
+            time.sleep(.3)
+            QApplication.processEvents()
+        if not self.overwrite: 
+            return
+    self.disableWidgets()
+    
     QApplication.processEvents()
     # checking q an chi range values to see if they're appropriate
     try:
@@ -342,7 +397,7 @@ def integrateThreadStart(self):
         
         c2 = float(str(self.chi_max.text()))
     except:
-        self.addToConsole("Please make sure you have entered in appropriate values for the QRange and the ChiRange.")
+        self.addToConsole("Please make sure you have entered appropriate values for the QRange and the ChiRange.")
         self.enableWidgets()
         return
     
@@ -358,7 +413,7 @@ def integrateThreadStart(self):
         return      
 
     dataPath = str(self.int_data_source.text())
-    if  os.path.isdir(dataPath) and self.int_data_source_check.isChecked():
+    if  os.path.isdir(dataPath):
         self.i_files_to_process = [dataPath]        
         
     self.addToConsole('Folder to process: ' + dataPath)
@@ -399,6 +454,7 @@ def addIntegrateCurrentToQueue(self):
     mq.curIndex+= 1 
     self.queue.addItem(macro)
     self.editor.close()
+    self.raise_()
     QApplication.processEvents()
     self.addToConsole("Macro saved and added to queue!")
 
@@ -422,12 +478,12 @@ def saveIntegrateMacro(self, fileName=''):
             i_filenames = self.i_files_to_process    
 
         data_source = str(self.int_data_source.text())
-        if self.int_data_source_check.isChecked() and os.path.isfile(self.i_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
-        elif not self.int_data_source_check.isChecked() and os.path.isdir(self.i_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
+        #if self.int_data_source_check.isChecked() and os.path.isfile(self.i_files_to_process[0]):
+            #displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
+            #return
+        #elif not self.int_data_source_check.isChecked() and os.path.isdir(self.i_files_to_process[0]):
+            #displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
+            #return
         if data_source == "":
             displayError(self, "Please select a integrate data source!")
             return
@@ -464,7 +520,7 @@ def saveIntegrateMacro(self, fileName=''):
     name = (final_dir + '/macro-%s.csv') %(cur_time)        
     fileName = QFileDialog.getSaveFileName(self, 'Save your new macro!', name)
     fileName = str(fileName)
-
+    self.raise_()       
     if fileName == '':
         self.raise_()
         return
@@ -501,34 +557,36 @@ def saveIntegrateMacro(self, fileName=''):
     self.addToConsole("Macro saved successfully!")
     return 1
         
-# None -> None
-# Retrieves and stores the selected data source for integration.
+# Loads the appropriate files based on the data source the user selects
 def getIntDataSourceDirectoryPath(self):
-    if self.int_data_source_check.isChecked():
-        try:
-            folderpath = str(QFileDialog.getExistingDirectory())
-            if folderpath != '':
-                self.int_data_source.setText(folderpath)
-                self.int_data_label.setText("Current data source:")
-                self.int_processed_location.setText(os.path.join(folderpath, "Processed_Integrate"))
-                self.i_files_to_process = [folderpath]
-        except:
-            self.addToConsole("Something went wrong when trying to open your directory.")
-    else:
-        try:
-          
-            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
-            filenames = [str(filename) for  filename in filenames]
-            if len(filenames) < 2:
-                self.int_data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
-            else:
-                self.int_data_label.setText("Current data source: (multiple files)")
-            self.int_data_source.setText(os.path.dirname(filenames[0]))
-            self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()),  "Processed_Integrate"))
-            self.i_files_to_process = filenames
-        except:
-            #traceback.print_exc()
-            self.addToConsole("Something went wrong when trying to select your files.")
+    try:
+        folderpath = str(QFileDialog.getExistingDirectory())
+        if folderpath != '':
+            self.int_data_source.setText(folderpath)
+            self.int_data_label.setText("Current data source: (folder)")
+            self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.i_files_to_process = [folderpath]
+        self.raise_()
+    except:
+        self.addToConsole("Something went wrong when trying to open your directory.")
+ 
+ # Loads the appropriate files based on the data source the user selects
+def getIntDataFiles(self):
+    try:
+        filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+        filenames = [str(filename) for  filename in filenames]
+        if len(filenames) < 2:
+            self.int_data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
+        else:
+            self.int_data_label.setText("Current data source: (multiple files)")
+        print(filenames)
+        self.int_data_source.setText(os.path.dirname(filenames[0]))
+        self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+        self.i_files_to_process = filenames
+        self.raise_()
+    except:
+        #traceback.print_exc()
+        self.addToConsole("Did not select a data source.")
     
     
 
@@ -538,7 +596,7 @@ def setIntProcessedLocation(self):
     path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text())))
     if path !='':
         self.int_processed_location.setText(os.path.join(path, "Processed_Integrate"))
-
+    self.raise_()
 # None -> None
 # Resets the integrate graph
 def resetIntegrate(self):

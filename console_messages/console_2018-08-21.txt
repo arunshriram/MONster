@@ -74,3 +74,291 @@ Could not load stitched image.
 Could not load integrated graph.
 Could not load stitched image.
 Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load stitched image.
+Could not load integrated graph.
+Did not select a data source.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0298.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0298.tif
+Using detector PILATUS3 X 100K-A
+k5_022318_1_24x24_t45_0299.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0299.tif
+k5_022318_1_24x24_t45_0298.tif completed
+k5_022318_1_24x24_t45_0300.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0300.tif
+k5_022318_1_24x24_t45_0299.tif completed
+k5_022318_1_24x24_t45_0301.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0301.tif
+k5_022318_1_24x24_t45_0300.tif completed
+k5_022318_1_24x24_t45_0302.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0302.tif
+k5_022318_1_24x24_t45_0301.tif completed
+k5_022318_1_24x24_t45_0303.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0303.tif
+k5_022318_1_24x24_t45_0302.tif completed
+Process aborted! Completing any processes that were already started...
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.1971s / file, max 10.3690.s / file
+-----Stage1: Avg 10.1970s / file, max 10.3689.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 61.182586s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0303.tif completed
+Macro saved successfully!
+Saving this page in directory "macros" as "transform-macro-2018-08-21--16-01-22" and adding to the queue...
+Macro saved successfully!
+Macro saved and added to queue!
+Saving this page in directory "macros" as "stitch-macro-2018-08-21--16-02-27" and adding to the queue...
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+b_mehta_IR66BE_th0p2_scan1_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan1_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan2_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan2_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan3_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan3_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan4_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan4_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan5_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan5_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan6_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan6_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan7_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan7_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan8_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan8_0000_Qchi.mat
+b_mehta_IR66BE_th0p2_scan9_0000_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/b_mehta_IR66BE_th0p2_scan9_0000_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 2.0424s / file, max 4.8450.s / file
+-----Total Time Elapsed 18.381596s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Please make sure you have entered in appropriate values for the QRange and the ChiRange.
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform
+
+k5_022318_1_24x24_t45_0298_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform/k5_022318_1_24x24_t45_0298_Qchi.mat
+k5_022318_1_24x24_t45_0299_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform/k5_022318_1_24x24_t45_0299_Qchi.mat
+k5_022318_1_24x24_t45_0298_Qchi.mat completed
+k5_022318_1_24x24_t45_0300_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform/k5_022318_1_24x24_t45_0300_Qchi.mat
+k5_022318_1_24x24_t45_0299_Qchi.mat completed
+k5_022318_1_24x24_t45_0301_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform/k5_022318_1_24x24_t45_0301_Qchi.mat
+k5_022318_1_24x24_t45_0300_Qchi.mat completed
+k5_022318_1_24x24_t45_0302_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform/k5_022318_1_24x24_t45_0302_Qchi.mat
+k5_022318_1_24x24_t45_0301_Qchi.mat completed
+k5_022318_1_24x24_t45_0303_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform/k5_022318_1_24x24_t45_0303_Qchi.mat
+k5_022318_1_24x24_t45_0302_Qchi.mat completed
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.9183s / file, max 1.0634.s / file
+-----Stage1: Avg 0.9067s / file, max 1.0464.s / file
+-----Stage2: Avg 0.0006s / file, max 0.0033.s / file
+-----Total Time Elapsed 5.510097s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0303_Qchi.mat completed
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing workflow.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0312.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0312.tif
+Using detector PILATUS3 X 100K-A
+k5_022318_1_24x24_t45_0313.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0313.tif
+k5_022318_1_24x24_t45_0312.tif completed
+k5_022318_1_24x24_t45_0314.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0314.tif
+k5_022318_1_24x24_t45_0313.tif completed
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.3345s / file, max 10.3900.s / file
+-----Stage1: Avg 10.3344s / file, max 10.3899.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 31.003508s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0314.tif completed
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0312_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0312_Qchi.mat
+k5_022318_1_24x24_t45_0313_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0313_Qchi.mat
+k5_022318_1_24x24_t45_0314_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0314_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 15.6129s / file, max 15.8083.s / file
+-----Total Time Elapsed 46.838580s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+******************************************************************************
+********************* Beginning Integration Processing... *********************
+******************************************************************************
+k5_022318_1_24x24_t45_0312_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0312_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.5788s / file, max 0.6992.s / file
+-----Stage1: Avg 0.5787s / file, max 0.6992.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 1.736389s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0314_Qchi.mat completed
+k5_022318_1_24x24_t45_0314_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0314_Qchi.mat
+k5_022318_1_24x24_t45_0313_Qchi.mat completed
+k5_022318_1_24x24_t45_0313_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0313_Qchi.mat
+k5_022318_1_24x24_t45_0312_Qchi.mat completed
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing workflow.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0312.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0312.tif
+Using detector PILATUS3 X 100K-A
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+k5_022318_1_24x24_t45_0313.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0313.tif
+k5_022318_1_24x24_t45_0312.tif completed
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+Queue paused! Any processes that are currently running will complete before the queue is able to pause.
+k5_022318_1_24x24_t45_0314.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0314.tif
+k5_022318_1_24x24_t45_0313.tif completed
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.3614s / file, max 10.4898.s / file
+-----Stage1: Avg 10.3613s / file, max 10.4897.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 31.084226s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0314.tif completed
+Pausing queue...
+Queue is paused!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Queue aborted! However, any processes that are currently running will complete before the queue stops.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Queue aborted! However, any processes that are currently running will complete before the queue stops.
+Could not load integrated graph.
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing workflow.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+k5_022318_1_24x24_t45_0312.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0312.tif
+Using detector PILATUS3 X 100K-A
+Process aborted! Completing any processes that were already started...
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.2796s / file, max 10.2796.s / file
+-----Stage1: Avg 10.2795s / file, max 10.2795.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.279593s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0312.tif completed
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0312_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform_Process_1/k5_022318_1_24x24_t45_0312_Qchi.mat
+No process to abort!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Queue aborted! However, any processes that are currently running will complete before the queue stops.
+====================================================
+====================================================
+Files finished processing
+-----Avg 14.4640s / file, max 14.4640.s / file
+-----Total Time Elapsed 14.464048s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+Aborting queue...
+Congratulations, you just killed the queue.
+Could not load integrated graph.
+Could not load integrated graph.
+Could not load Qchi image.
+Could not load stitched image.
+Could not load integrated graph.
+Could not load Qchi image.
+Could not load stitched image.
+Could not load integrated graph.

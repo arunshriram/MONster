@@ -1,15 +1,17 @@
-    # This file initializes the various widgets used in the queue loader tab and its layout. It also
+# This file initializes the various widgets used in the queue loader tab and its layout. It also
 # includes a class that defines what a Macro is and a class for the macro editor itself, interfacing that
 # with MONster.
 #
-# This is one of the seven main files (IntegrateThread, MONster, monster_queueloader, monster_transform, monster_stitch, TransformThread, StitchThread) that controls the MONster GUI. 
+# This is one of the nine main files (HelpDialog, monster_integrate, monster_stitch, 
+# monster_transform, MONster, TransformThread, StitchThread, IntegrateThread, monster_queueloader) 
+# that control the MONster GUI. 
 #
 # Runs with PyQt4, SIP 4.19.3, Python version 2.7.5
 # 
 # Author: Arun Shriram
 # Written for my SLAC Internship at SSRL
 # File Start Date: June 25, 2018
-# File End Date: 
+# File End Date: August 31, 2018
 #
 #
 from PyQt4.QtCore import *
@@ -186,9 +188,10 @@ class MacroEditor(QWidget):
         self.stitch_saveLocation.setDisabled(True)
         self.stitch_saveLocation_button.setDisabled(True)
         self.int_data_source.setDisabled(True)
+        self.int_data_folder.setDisabled(True)
+        self.int_folder_button.setDisabled(True)
+        self.int_file_button.setDisabled(True)        
         self.int_processed_location.setDisabled(True)
-        self.int_data_source_check.setDisabled(True)
-        self.int_data_folder_button.setDisabled(True)
         self.int_processed_location_folder_button.setDisabled(True)
         
 
@@ -202,8 +205,9 @@ class MacroEditor(QWidget):
         self.stitch_saveLocation_button.setEnabled(True)
         self.int_data_source.setEnabled(True)
         self.int_processed_location.setEnabled(True)
-        self.int_data_source_check.setEnabled(True)
-        self.int_data_folder_button.setEnabled(True)
+        self.int_data_folder.setEnabled(True)
+        self.int_folder_button.setEnabled(True)
+        self.int_file_button.setEnabled(True)
         self.int_processed_location_folder_button.setEnabled(True)
 
     def stack0UI(self):
@@ -268,14 +272,16 @@ class MacroEditor(QWidget):
         #self.data_source = QLineEdit("/Users/arunshriram/Documents/SLAC Internship/test")
         self.data_source = ClickableLineEdit()
         self.data_source.setFixedWidth(580)
-        self.data_folder_button = QPushButton()
-        self.data_folder_button.setIcon(QIcon('images/folder_select_gray.png'))
-        self.data_folder_button.setIconSize(QSize(25, 25))
-        self.data_folder_button.setFixedSize(25, 25)
-        self.data_folder_button.setStyleSheet('border: none;')
+        self.data_folder = QLabel()
+        self.data_folder.setFixedSize(25, 25)
+        self.data_folder.setPixmap(QPixmap('images/folder_select_gray.png').scaled(25, 25))
+        self.data_folder.setStyleSheet('border: none;')
+        self.folder_button = QPushButton("Select a folder")
+        self.folder_button.setFixedSize(self.folder_button.sizeHint().width(), self.folder_button.sizeHint().height())
+        
+        self.file_button = QPushButton("Select one or more files")
+        self.file_button.setFixedSize(self.file_button.sizeHint().width(), self.file_button.sizeHint().height())
     
-        self.data_source_check = QCheckBox("I'm going to select a folder")
-        self.data_source_check.setChecked(True)
     
         self.calib_label = QLabel("Current calibration file source:")
         #self.calib_source = QLineEdit("/Users/arunshriram/Documents/SLAC Internship/calib/cal_28mar18.calib")
@@ -284,17 +290,15 @@ class MacroEditor(QWidget):
         self.calib_folder_button = QPushButton()
         self.calib_folder_button.setIcon(QIcon('images/folder_select_gray.png'))
         self.calib_folder_button.setIconSize(QSize(25, 25))
-        self.calib_folder_button.setFixedSize(25, 25)
-        self.calib_folder_button.setStyleSheet('border: none;')        
+        self.calib_folder_button.setFixedSize(35, 35)
     
-        self.processed_location_label = QLabel("Current location for processed files:")
+        self.processed_location_label = QLabel("Destination for processed files:")
         self.processed_location = ClickableLineEdit(self.data_source.text())
         self.processed_location.setFixedWidth(580)
         self.processed_location_folder_button = QPushButton()
         self.processed_location_folder_button.setIcon(QIcon('images/folder_select_gray.png'))
         self.processed_location_folder_button.setIconSize(QSize(25, 25))
-        self.processed_location_folder_button.setFixedSize(25, 25)
-        self.processed_location_folder_button.setStyleSheet('border: none;')
+        self.processed_location_folder_button.setFixedSize(35, 35)
     
         self.custom_calib_label = QLabel("Customize your calibration here: ")
         self.dcenterx_label = QLabel("Detector Center X:")
@@ -329,13 +333,16 @@ class MacroEditor(QWidget):
             self.detector_combo.addItem(str(detector))        
 
         v_box1 = QVBoxLayout()
-        h_box1 = QHBoxLayout()
-        h_box1.addWidget(self.data_label)
-        v_box1.addLayout(h_box1)
+        v_box1.addWidget(self.data_label)
+        x = QLabel("Data source directory:")
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        v_box1.addWidget(line)
+        v_box1.addWidget(x)
         h_box2 = QHBoxLayout()
         h_box2.addWidget(self.data_source)
-        h_box2.addWidget(self.data_folder_button)
-        h_box2.addWidget(self.data_source_check)        
+        h_box2.addWidget(self.folder_button)
+        h_box2.addWidget(self.file_button)
         h_box2.addStretch()
         v_box1.addLayout(h_box2)
         v_box1.addWidget(self.calib_label)
@@ -388,17 +395,17 @@ class MacroEditor(QWidget):
         self.images_select_files_button = QPushButton()
         self.images_select_files_button.setIcon(QIcon('images/folder_select_gray.png'))
         self.images_select_files_button.setIconSize(QSize(25, 25))
-        self.images_select_files_button.setFixedSize(25, 25)
-        self.images_select_files_button.setStyleSheet('border: none;')
+        self.images_select_files_button.setFixedSize(35, 35)
+        #self.images_select_files_button.setStyleSheet('border: none;')
         self.saveLabel = QLabel("File Save Location:")
         #self.saveLabel.setStyleSheet("QLabel {color: white;}")
         self.stitch_saveLocation = ClickableLineEdit()
-        self.stitch_saveLocation.setFixedWidth(580)
+        self.stitch_saveLocation.setFixedWidth(580) 
         self.stitch_saveLocation_button = QPushButton()
         self.stitch_saveLocation_button.setIcon(QIcon("images/folder_select_gray.png"))
-        self.stitch_saveLocation_button.setFixedSize(25 ,25)
+        self.stitch_saveLocation_button.setFixedSize(35 ,35)
         self.stitch_saveLocation_button.setIconSize(QSize(25, 25))
-        self.stitch_saveLocation_button.setStyleSheet("border: none;")
+        #self.stitch_saveLocation_button.setStyleSheet("border: none;")
     
         self.stitch_data_label = QLabel("Current data folder:")
         #self.stitch_data_label.setStyleSheet("QLabel {color: white;}")
@@ -442,28 +449,29 @@ class MacroEditor(QWidget):
         
         self.chi_max.setFixedWidth(65)    
         
-        self.int_data_label = QLabel("Current data source:")
+        self.int_data_label = QLabel("Current data source: (folder)")
         self.int_data_source = ClickableLineEdit()
-        
+        self.int_folder_button = QPushButton("Select a folder")
+        self.int_folder_button.setFixedSize(self.int_folder_button.sizeHint().width(), self.int_folder_button.sizeHint().height())
+    
+        self.int_file_button = QPushButton("Select one or more files")
+        self.int_file_button.setFixedSize(self.int_file_button.sizeHint().width(), self.int_file_button.sizeHint().height())        
         self.int_data_source.setFixedWidth(580)
-        self.int_data_folder_button = QPushButton()
-        self.int_data_folder_button.setIcon(QIcon('images/folder_select_gray.png'))
-        self.int_data_folder_button.setIconSize(QSize(25, 25))
-        self.int_data_folder_button.setFixedSize(25, 25)
-        self.int_data_folder_button.setStyleSheet('border: none;')
-        self.int_data_source_check = QCheckBox("I'm going to select a folder")
+        self.int_data_folder = QLabel()
+        self.int_data_folder.setPixmap(QPixmap('images/folder_select_gray.png').scaled(25, 25))
+        self.int_data_folder.setFixedSize(25, 25)
+        #self.int_data_folder_button.setStyleSheet('border: none;')
         
-        self.int_data_source_check.setChecked(True)
         
-        self.int_processed_location_label = QLabel("Current location for processed files:")
+        self.int_processed_location_label = QLabel("Destination for processed files:")
         self.int_processed_location = ClickableLineEdit(self.int_data_source.text())
         
         self.int_processed_location.setFixedWidth(580)
         self.int_processed_location_folder_button = QPushButton()
         self.int_processed_location_folder_button.setIcon(QIcon('images/folder_select_gray.png'))
         self.int_processed_location_folder_button.setIconSize(QSize(25, 25))
-        self.int_processed_location_folder_button.setFixedSize(25, 25)
-        self.int_processed_location_folder_button.setStyleSheet('border: none;')    
+        self.int_processed_location_folder_button.setFixedSize(35, 35)
+        #self.int_processed_location_folder_button.setStyleSheet('border: none;')    
         
       
         hbox = QHBoxLayout()
@@ -490,13 +498,19 @@ class MacroEditor(QWidget):
         v_box1.addLayout(h4)
         
         layout = QVBoxLayout()
+        x = QLabel("Data source directory:")
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)        
         h_box2 = QHBoxLayout()
         h_box2.addWidget(self.int_data_source)
         #h_box2.addStretch()
-        h_box2.addWidget(self.int_data_folder_button)
-        h_box2.addWidget(self.int_data_source_check)
+        h_box2.addWidget(self.int_data_folder)
+        h_box2.addWidget(self.int_folder_button)
+        h_box2.addWidget(self.int_file_button)
         h_box2.addStretch()
         layout.addWidget(self.int_data_label)
+        layout.addWidget(line)
+        layout.addWidget(x)
         layout.addLayout(h_box2)
         
         h_box7 = QHBoxLayout()
@@ -513,15 +527,16 @@ class MacroEditor(QWidget):
 
        
      
-     
 
     def updateConnections(self):
         self.cancelButton.clicked.connect(lambda: self.close())
         self.loadMacroButton.clicked.connect(self.loadMacro)
         self.addToQueueButton.clicked.connect(lambda: addMacroToQueue(self.windowreference))
         self.saveCustomCalib.clicked.connect(self.saveCalibAction)
-        self.data_folder_button.clicked.connect(self.getTransformDataSourceDirectoryPath)
-        self.int_data_folder_button.clicked.connect(self.getIntegrateDataSourceDirectoryPath)
+        self.folder_button.clicked.connect(self.getTransformDataSourceDirectoryPath)
+        self.file_button.clicked.connect(self.getTransformDataSourceFiles)
+        self.int_folder_button.clicked.connect(self.getIntegrateDataSourceDirectoryPath)
+        self.int_file_button.clicked.connect(self.getIntegrateDataSourceFiles)        
         self.calib_folder_button.clicked.connect(self.getCalibSourcePath)
         self.processed_location_folder_button.clicked.connect(self.setProcessedLocation)        
         self.int_processed_location_folder_button.clicked.connect(self.setIntProcessedLocation)
@@ -533,8 +548,7 @@ class MacroEditor(QWidget):
         for editor in self.findChildren(ClickableLineEdit):
             editor.textChanged.connect(lambda: self.setFieldsChanged(True))
         for box in self.findChildren(QCheckBox):
-            if box != self.data_source_check:
-                box.stateChanged.connect(lambda: self.setFieldsChanged(True))        
+            box.stateChanged.connect(lambda: self.setFieldsChanged(True))        
         self.detector_combo.currentIndexChanged.connect(lambda: self.setFieldsChanged(True))
 
 
@@ -543,7 +557,7 @@ class MacroEditor(QWidget):
         path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files"))
         if path !='':
             self.stitch_saveLocation.setText(os.path.join(path, "Processed_Stitch"))
-            
+        self.raise_()
     def stitchImageSelect(self):
         try:
             folderpath = str(QFileDialog.getExistingDirectory(directory=os.getcwd()))
@@ -551,6 +565,7 @@ class MacroEditor(QWidget):
                 self.images_select.setText(folderpath)
                 self.stitch_saveLocation.setText(os.path.join(folderpath, "Processed_Stitch"))
                 self.s_files_to_process = [folderpath]
+            self.raise_()
         except:
             displayError(self, "Something went wrong when trying to open your directory.")
             return
@@ -558,75 +573,86 @@ class MacroEditor(QWidget):
     def setFieldsChanged(self, boo):
         self.fieldsChanged = boo
         
+      # Loads the appropriate files based on the data source the user selects
     def getTransformDataSourceDirectoryPath(self):
-        if self.data_source_check.isChecked():
-            try:
-                folderpath = str(QFileDialog.getExistingDirectory())
-                if folderpath != '':
-                    self.data_source.setText(folderpath)
-                    self.data_label.setText("Current data source:")
-                    self.processed_location.setText(os.path.join(str(self.data_source.text()),   "Processed_Transform"))
-                    self.t_files_to_process = [folderpath]
-            except: 
-                self.addToConsole("Something went wrong when trying to open your directory.")
-        else:
-            try:
-                filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
-                filenames = [str(filename) for  filename in filenames]
-                if len(filenames) < 2:
-                    self.data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
-                else:    
-                    self.data_label.setText("Current data source: (multiple files)")
-                self.data_source.setText(os.path.dirname(filenames[0]))
-                self.processed_location.setText(os.path.join(str(self.data_source.text())  , "Processed_Transform"))
-                self.t_files_to_process = filenames   
-            except:
-                #traceback.print_exc()
-                self.addToConsole("Something went wrong when trying to select your files.")
-    
+        try:
+            folderpath = str(QFileDialog.getExistingDirectory())
+            if folderpath != '':
+                self.data_source.setText(folderpath)
+                self.data_label.setText("Current data source: (folder)")
+                self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                self.t_files_to_process = [folderpath]
+            self.raise_()
+        except:
+            self.addToConsole("Something went wrong when trying to open your directory.")
+     
+     # Loads the appropriate files based on the data source the user selects
+    def getTransformDataSourceFiles(self):
+        try:
+            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+            filenames = [str(filename) for  filename in filenames]
+            if len(filenames) < 2:
+                self.data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
+            else:
+                self.data_label.setText("Current data source: (multiple files)")
+            print(filenames)
+            self.data_source.setText(os.path.dirname(filenames[0]))
+            self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.t_files_to_process = filenames
+            self.raise_()
+        except:
+            #traceback.print_exc()
+            self.addToConsole("Did not select a data source.")   
+            
+       # Loads the appropriate files based on the data source the user selects
     def getIntegrateDataSourceDirectoryPath(self):
-        if self.int_data_source_check.isChecked():
-            try:
-                folderpath = str(QFileDialog.getExistingDirectory())
-                if folderpath != '':
-                    self.int_data_source.setText(folderpath)
-                    self.int_data_label.setText("Current data source:")
-                    self.int_processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Integrate"))
-                    self.i_files_to_process = [folderpath]
-            except: 
-                self.addToConsole("Something went wrong when trying to open your directory.")
-        else:
-            try:
-           
-                filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
-                filenames = [str(filename) for  filename in filenames]
-                if len(filenames) < 2:
-                    self.int_data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
-                else:    
-                    self.int_data_label.setText("Current data source: (multiple files)")
-                self.int_data_source.setText(os.path.dirname(filenames[0]))
-                self.int_processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Integrate"))
-                self.i_files_to_process = filenames   
-            except:
-                #traceback.print_exc()
-                self.addToConsole("Something went wrong when trying to select your files.")
+        try:
+            folderpath = str(QFileDialog.getExistingDirectory())
+            if folderpath != '':
+                self.int_data_source.setText(folderpath)
+                self.int_data_label.setText("Current data source: (folder)")
+                self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                self.i_files_to_process = [folderpath]
+                self.raise_()
+        except:
+            self.addToConsole("Something went wrong when trying to open your directory.")
+
+        # Loads the appropriate files based on the data source the user selects
+    def getIntegrateDataSourceFiles(self):
+        try:
+            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+            filenames = [str(filename) for  filename in filenames]
+            if len(filenames) < 2:
+                self.int_data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
+            else:
+                self.int_data_label.setText("Current data source: (multiple files)")
+            print(filenames)
+            self.int_data_source.setText(os.path.dirname(filenames[0]))
+            self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.i_files_to_process = filenames
+            self.raise_()
+        except:
+            #traceback.print_exc()
+            self.addToConsole("Did not select a data source.")   
         
     def getCalibSourcePath(self):
         path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
         if path !='':
             self.calib_source.setText(path)
             self.loadCalibration()
-            
+        self.raise_()
             
     def setProcessedLocation(self):
         path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.data_source.text())))
         if path !='':
             self.processed_location.setText(os.path.join(path, "Processed_Transform"))
+        self.raise_()
         
     def setIntProcessedLocation(self):
         path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text())))
         if path !='':
             self.int_processed_location.setText(os.path.join(path, "Processed_Integrate"))
+        self.raise_()
      
     def saveCalibAction(self):
         name = ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/cal-%s.calib') %(datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S'))
@@ -643,6 +669,7 @@ class MacroEditor(QWidget):
                 calib.write("wavelength=" + str(self.wavelength.text()) + '\n')
                 calib.write('-\n')
             self.calib_source.setText(os.path.expanduser(str(fileName)))
+            self.raise_()
         except:
             self.addToConsole("Calibration not saved!")
             return        
@@ -677,12 +704,7 @@ class MacroEditor(QWidget):
         t_calib_source = str(self.calib_source.text())
 
         data_source = str(self.data_source.text())
-        if self.data_source_check.isChecked() and os.path.isfile(self.t_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
-        elif not self.data_source_check.isChecked() and os.path.isdir(self.t_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
+
         if data_source == "":
             displayError(self, "Please select a transform data source!")
             return
@@ -701,12 +723,7 @@ class MacroEditor(QWidget):
             i_filenames = self.i_files_to_process    
 
         data_source = str(self.int_data_source.text())
-        if self.int_data_source_check.isChecked() and os.path.isfile(self.i_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
-        elif not self.int_data_source_check.isChecked() and os.path.isdir(self.i_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
+       
         if data_source == "":
             displayError(self, "Please select a integrate data source!")
             return
@@ -823,9 +840,10 @@ class MacroEditor(QWidget):
         name = (final_dir + '/macro-%s.csv') %(cur_time)        
         fileName = QFileDialog.getSaveFileName(self, 'Save your new macro!', name)
         fileName = str(fileName)
-   
+        self.raise_()    
         if fileName == '':
             self.raise_()
+            self.fieldsChanged = True
             return
         if not fileName.endswith(".csv"):
             fileName += ".csv"        
@@ -931,6 +949,7 @@ class MacroEditor(QWidget):
                 filename = QFileDialog.getOpenFileName(self, "Select your macro", directory=current)
         
             filename = str(filename)
+            
         else:
             filename = str(name)
         self.macroSelected.setText("Current macro selected: %s" % (os.path.join(os.path.dirname(str(filename)).split("/")[-1], os.path.basename(str(filename)))))
@@ -954,12 +973,12 @@ class MacroEditor(QWidget):
                     self.t_files_to_process = t_data_source
                     self.data_label.setText("Current data source: %s" % os.path.basename(t_data_source[0]))
                     self.data_source.setText(t_data_source[0])
-                    self.data_source_check.setChecked(True)
+                    #self.data_source_check.setChecked(True)
                 elif os.path.isfile(t_data_source[0]):
                     self.t_files_to_process = t_data_source
                     self.data_label.setText("Current data source: (multiple files)")                        
                     self.data_source.setText(os.path.dirname(t_data_source[0]))
-                    self.data_source_check.setChecked(False)
+                    #self.data_source_check.setChecked(False)
                 else:
                     displayError(self.windowreference, "Could not locate transform data source specified in macro!")
                     QApplication.processEvents()
@@ -1006,12 +1025,12 @@ class MacroEditor(QWidget):
                         self.t_files_to_process = t_data_source
                         self.data_label.setText("Current data source: %s" % os.path.basename(t_data_source[0]))
                         self.data_source.setText(t_data_source[0])
-                        self.data_source_check.setChecked(True)
+                        #self.data_source_check.setChecked(True)
                     elif os.path.isfile(t_data_source[0]):
                         self.t_files_to_process = t_data_source
                         self.data_label.setText("Current data source: (multiple files)")                        
                         self.data_source.setText(os.path.dirname(t_data_source[0]))
-                        self.data_source_check.setChecked(False)
+                        #self.data_source_check.setChecked(False)
                     else:
                         displayError(self.windowreference, "Could not locate transform data source specified in macro!")
                         QApplication.processEvents()
@@ -1047,12 +1066,12 @@ class MacroEditor(QWidget):
                         self.i_files_to_process = i_data_source
                         self.int_data_label.setText("Current data source: %s" % os.path.basename(i_data_source[0]))
                         self.int_data_source.setText(i_data_source[0])            
-                        self.int_data_source_check.setChecked(True)
-                    elif os.path.sifile(i_data_source[0]):
+                        #self.int_data_source_check.setChecked(True)
+                    elif os.path.isfile(i_data_source[0]):
                         self.i_files_to_process = i_data_source
                         self.int_data_label.setText("Current data source: (multiple files)")                        
                         self.int_data_source.setText(os.path.dirname(i_data_source[0]))
-                        self.int_data_source_check.setChecked(False)
+                        #self.int_data_source_check.setChecked(False)
                     else:
                         displayError(self.windowreference, "Could not locate integrate data source specified in macro!")
                         return             
@@ -1078,8 +1097,8 @@ class MacroEditor(QWidget):
                 self.transformCheck.setChecked(transform)
                 self.stitchCheck.setChecked(stitch)
                 self.integrateCheck.setChecked(integrate)
-                if self.data_source_check.isChecked():
-                    self.data_label.setText("Current data source:")
+                #if self.data_source_check.isChecked():
+                    #self.data_label.setText("Current data source:")
                 
                 if not transform:
                     self.transformCheck.setChecked(False)
@@ -1090,7 +1109,7 @@ class MacroEditor(QWidget):
             self.curMacro = Macro(filename, macrodict)
             
             self.setFieldsChanged(False)
-          
+            self.raise_()
                                  
         except:
             traceback.print_exc()
@@ -1122,9 +1141,11 @@ def generateQueueWidgets(self):
     self.addMacroButton.setStyleSheet("QPushButton {background-color : rgb(60, 60, 60); color: white; }")
     self.removeButton = QPushButton(" - ")
     self.removeButton.setStyleSheet("QPushButton {background-color : rgb(60, 60, 60); color: white; }")
+    self.addmacrotext = QLabel("<-- Click these to add/load macros to the queue or remove processes from the queue")
+    self.addmacrotext.setStyleSheet("color: white;")
     self.qconsole = QTextBrowser()
     self.qconsole.setMinimumHeight(150)
-    self.qconsole.setMaximumHeight(300)
+    self.qconsole.setMaximumHeight(400)
     self.qconsole.moveCursor(QTextCursor.End)
 
     self.qconsole.setFont(QFont("Avenir", 14))
@@ -1194,6 +1215,7 @@ def generateQueueLayout(self):
     v_box.addWidget(self.queue)
     add_remove_box.addWidget(self.addMacroButton)
     add_remove_box.addWidget(self.removeButton)
+    add_remove_box.addWidget(self.addmacrotext)
     add_remove_box.addStretch()
     v_box.addLayout(add_remove_box)
     controls = QHBoxLayout()
@@ -1331,7 +1353,7 @@ def beginQueue(self):
                 while (self.queue_pause):
                     time.sleep(.4)
                     QApplication.processEvents()
-            dataFiles = [processed_filedir]    
+            dataFiles = [os.path.join(processed_filedir, "Transformed_Mat")]    
 
             s_processed_filedir = os.path.join(processed_filedir, "Processed_Stitch")    
             
@@ -1355,7 +1377,7 @@ def beginQueue(self):
                 while (self.queue_pause):
                     time.sleep(.4)
                     QApplication.processEvents()
-            dataFiles = [processed_filedir]
+            dataFiles = [os.path.join(processed_filedir, "Transformed_Mat")]
             i_processed_filedir = os.path.join(processed_filedir ,"Processed_Integrate"    )
 
             startIntegrateThread(self, dataFiles, i_processed_filedir, QRange, ChiRange, increment)
@@ -1438,6 +1460,7 @@ def beginQueue(self):
         macrindex += 1
     self.enableWidgets()
     self.queue_abort = False
+    self.setCurrentIndex(3)
 
 # list str tuple str float-> None
 # Takes a list of datafiles (either a list with a string folder name inside or a list of pathnames), a calibration source, a tuple of detector data, and a processed file directory, and starts the transform thread. The float is the increment to push the queue radial bar
@@ -1615,7 +1638,7 @@ def saveQueue(self):
         dict_list.append(newdict)
         
     fname = str(QFileDialog.getSaveFileName(self, "Select the location you wish to save your queue", "queueList.json"))
-
+    self.raise_()
     if fname == "":
         self.addToConsole("Queue list not saved!")
         return
@@ -1627,6 +1650,7 @@ def saveQueue(self):
 
 def loadQueue(self):
     fname = str(QFileDialog.getOpenFileName(self, "Select a queue JSON file"))
+    self.raise_()
     if fname == "":
         self.addToConsole("No queue list selected!")
         return
@@ -1708,7 +1732,7 @@ def calculateMacroQueueIncrement(self):
                 dataFiles = macro.getSDataFiles()
                 fileList = sorted(glob.glob(os.path.join(dataFiles, '*.mat')))
                 if len(fileList) == 0:
-                    return
+                    thismacrocount += 0
                 else:
                     thismacrocount += len(fileList)
                     thismacrocount += 1
@@ -1718,15 +1742,18 @@ def calculateMacroQueueIncrement(self):
                 if os.path.isdir(dataFiles[0]):
                     fileList = sorted(glob.glob(os.path.join(dataFiles[0], '*.mat')))
                     if len(fileList) == 0:
-                        return
+                        thismacrocount += 0
                     files = fileList[0:10000000000000000]
                 else:
                     fileList = dataFiles
                 if len(fileList) > 0:
                     thismacrocount += len(fileList)
                 else:
-                    return
+                    thismacrocount += 0
             count += thismacrocount
-    increment = (float(1)/count)*100
+    try:    
+        increment = (float(1)/count)*100
+    except:
+        increment = 0
     return increment
                 

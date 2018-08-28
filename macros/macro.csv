@@ -1,0 +1,16 @@
+stitch,True
+workflow,False
+t_data_source,['/Users/arunshriram/Documents/SLAC Internship/test_data/k5']
+t_calib_source,/Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+detector_type,PILATUS3 X 100K-A
+transform,True
+qmax,6.0
+chimin,-20.0
+i_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/Processed_Integrate
+qmin,1.0
+chimax,20.0
+integrate,True
+i_data_source,['/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform']
+s_data_source,/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus
+s_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/Pilatus/Processed_Stitch
+t_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform

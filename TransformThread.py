@@ -168,6 +168,8 @@ class TransformThread(QThread):
             shutil.rmtree(save_path)    
         
         os.makedirs(save_path)
+        os.makedirs(os.path.join(save_path, "Transformed_Images"))
+        os.makedirs(os.path.join(save_path, "Transformed_Mat"))
         for filePath in files:
 
             QApplication.processEvents()
@@ -211,12 +213,12 @@ class TransformThread(QThread):
             save_path = str(self.processedPath)
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
-            with open("thisRun.txt", 'w') as runFile:
+            with open("Bookkeeping/thisRun.txt", 'w') as runFile:
                 
                 runFile.write("t_data_source, " + str(self.dataPath)+'\n')
                 runFile.write("t_calib_source, " + str(self.calibPath)+'\n')
                 runFile.write("t_processed_loc, " + str(self.processedPath )+ '\n')
-                name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma.png')                
+                name = os.path.join(os.path.join(save_path, "Transformed_Images"), os.path.splitext(imageFilename)[0]+'_gamma.png')                
                 self.emit(SIGNAL("setRawImage(PyQt_PyObject)"), (name))
                 runFile.write("two_d_image, " + name + '\n')
                      
@@ -296,7 +298,13 @@ class TransformThread(QThread):
         self.imArray = np.flipud(self.imArray)
 
         # data_reduction to generate Q-chi, Q
-        Q, chi, cake, = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
+        try:
+            Q, chi, cake, = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
+        except: # non-optimal parameters
+            self.emit(SIGNAL("addToConsole(PyQt_PyObjct)"), "Could not perform data reduction!")
+            print("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+            return
+            
 
 
         ###### SAVE PLOTS ###############################################################
@@ -339,13 +347,13 @@ class TransformThread(QThread):
 def writeTransformProperties():
     try:
         properties = []
-        with open("thisRun.txt", 'r') as thisrun:
+        with open("Bookkeeping/thisRun.txt", 'r') as thisrun:
             properties.append( thisrun.readline().split(", ")[1].rstrip())
             properties.append( thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
 
-        with open('Properties.csv', 'rb') as prop:
+        with open('Bookkeeping/Properties.csv', 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         detectors = Properties["detectors"]
@@ -399,7 +407,7 @@ def writeTransformProperties():
     
 
         
-        with open("Properties.csv", 'wb') as prop:
+        with open("Bookkeeping/Properties.csv", 'wb') as prop:
             writer = csv.writer(prop)
             for key, value in property_dict.items():
                 writer.writerow([key, value])    

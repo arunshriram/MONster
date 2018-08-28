@@ -1,0 +1,543 @@
+Saving this page in directory "macros" as "transform-macro-2018-08-26--17-45-13" and adding to the queue...
+Macro saved successfully!
+Macro saved and added to queue!
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.4318s / file, max 0.4318.s / file
+-----Stage1: Avg 0.3920s / file, max 0.3920.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.431833s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.3969s / file, max 0.3969.s / file
+-----Stage1: Avg 0.3710s / file, max 0.3710.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.396941s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+Process aborted! Completing any processes that were already started...
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.4937s / file, max 10.4937.s / file
+-----Stage1: Avg 10.4936s / file, max 10.4936.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.493726s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+Welcome, arunshriram! Setting up MONster for you, just the way you left it...
+Could not load integrated graph.
+===========================================================
+Welcome, arunshriram! Setting up MONster for you, just the way you left it...
+===========================================================
+Could not load integrated graph.
+===========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+===========================================================
+Could not load integrated graph.
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load integrated graph.
+===============================================================
+||      Welcome to MONster, arunshriram! No need to be afraid, this MONster's on your side.      ||
+===============================================================
+Could not load integrated graph.
+===============================================================
+||    Welcome to MONster, arunshriram! No need to be afraid, this MONster's on your side.    ||
+===============================================================
+Could not load integrated graph.
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.4074s / file, max 0.4074.s / file
+-----Stage1: Avg 0.3855s / file, max 0.3855.s / file
+-----Stage2: Avg 0.0179s / file, max 0.0179.s / file
+-----Total Time Elapsed 0.407364s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/k5_022318_1_24x24_t45_0001_Qchi.mat
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/k5_022318_1_24x24_t45_0001_Qchi.mat
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform
+
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.3925s / file, max 0.3925.s / file
+-----Stage1: Avg 0.3779s / file, max 0.3779.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.392468s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+Please make sure you select the files you wish to process, or check the "I'm going to select a folder" box.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+No files found in specified source directory!
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load Qchi image.
+Could not load stitched image.
+Could not load integrated graph.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.2952s / file, max 10.2952.s / file
+-----Stage1: Avg 10.2951s / file, max 10.2951.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.295219s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+Process aborted! Completing any processes that were already started...
+Process aborted! Completing any processes that were already started...
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.4129s / file, max 10.4129.s / file
+-----Stage1: Avg 10.4128s / file, max 10.4128.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.412886s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+Please make sure you select the files you wish to process, or check the "I'm going to select a folder" box.
+********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+k5_022318_1_24x24_t45_0002.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0002.tif
+k5_022318_1_24x24_t45_0001.tif completed
+k5_022318_1_24x24_t45_0003.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0003.tif
+k5_022318_1_24x24_t45_0002.tif completed
+k5_022318_1_24x24_t45_0004.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0004.tif
+k5_022318_1_24x24_t45_0003.tif completed
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.4383s / file, max 10.6180.s / file
+-----Stage1: Avg 10.4382s / file, max 10.6179.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 41.753107s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0004.tif completed
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing w.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.3223s / file, max 10.3223.s / file
+-----Stage1: Avg 10.3222s / file, max 10.3222.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.322327s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load stitched image.
+Could not load integrated graph.
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing w.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.4356s / file, max 10.4356.s / file
+-----Stage1: Avg 10.4355s / file, max 10.4355.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.435556s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 14.0754s / file, max 14.0754.s / file
+-----Total Time Elapsed 14.075362s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+Could not load stitched image.
+******************************************************************************
+********************* Beginning Integration Processing... *********************
+******************************************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.3597s / file, max 0.3597.s / file
+-----Stage1: Avg 0.3596s / file, max 0.3596.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.359655s
+====================================================
+====================================================
+Could not load integrated graph.
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load integrated graph.
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load integrated graph.
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing w.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.3782s / file, max 10.3782.s / file
+-----Stage1: Avg 10.3781s / file, max 10.3781.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.378203s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 15.5483s / file, max 15.5483.s / file
+-----Total Time Elapsed 15.548333s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+Could not load stitched image.
+******************************************************************************
+********************* Beginning Integration Processing... *********************
+******************************************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.3594s / file, max 0.3594.s / file
+-----Stage1: Avg 0.3593s / file, max 0.3593.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.359392s
+====================================================
+====================================================
+Could not load integrated graph.
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load integrated graph.
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+Could not load integrated graph.
+*****************************************************************
+**********************Beginning Queue...************************
+*****************************************************************
+Processing w.csv...
+******************************************************************************
+************************ Beginning Transform Processing... ***********************
+******************************************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5
+
+k5_022318_1_24x24_t45_0001.tif detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/k5_022318_1_24x24_t45_0001.tif
+Using detector PILATUS3 X 100K-A
+====================================================
+====================================================
+Files finished processing
+-----Avg 10.3924s / file, max 10.3924.s / file
+-----Stage1: Avg 10.3923s / file, max 10.3923.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 10.392398s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001.tif completed
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 14.4126s / file, max 14.4126.s / file
+-----Total Time Elapsed 14.412628s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+Could not load stitched image.
+******************************************************************************
+********************* Beginning Integration Processing... *********************
+******************************************************************************
+k5_022318_1_24x24_t45_0001_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat/k5_022318_1_24x24_t45_0001_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.3568s / file, max 0.3568.s / file
+-----Stage1: Avg 0.3567s / file, max 0.3567.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.356776s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001_Qchi.mat completed
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Processed_Stitch/Stitched_Mat
+
+k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat detected, processing
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Processed_Stitch/Stitched_Mat/k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 0.3866s / file, max 0.3866.s / file
+-----Stage1: Avg 0.3774s / file, max 0.3774.s / file
+-----Stage2: Avg 0.0000s / file, max 0.0000.s / file
+-----Total Time Elapsed 0.386617s
+====================================================
+====================================================
+k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat completed
+Saving this page in directory "macros" as "stitch-macro-2018-08-26--18-45-55" and adding to the queue...
+Macro saved successfully!
+Macro saved and added to queue!
+Saving this page in directory "macros" as "stitch-macro-2018-08-26--18-46-02" and adding to the queue...
+Macro saved successfully!
+Macro saved and added to queue!
+Saving this page in directory "macros" as "stitch-macro-2018-08-26--18-46-05" and adding to the queue...
+Macro saved successfully!
+Macro saved and added to queue!
+Saving this page in directory "macros" as "transform-macro-2018-08-26--18-46-08" and adding to the queue...
+Macro saved successfully!
+Macro saved and added to queue!
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Processed_Stitch/Stitched_Mat/k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat
+====================================================
+====================================================
+Files finished processing
+-----Avg 13.9503s / file, max 13.9503.s / file
+-----Total Time Elapsed 13.950258s
+====================================================
+====================================================
+All files were successfully stitched!
+-----------------------------------------------------------
+Could not load stitched image.
+****************************************************
+********** Beginning Stitch Processing... ***********
+****************************************************
+k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat detected, processing.
+/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Processed_Stitch/Stitched_Mat/k5_022318_1_24x24_t45_0001_Qchi_Qchi.mat
+========================================================
+||   Welcome, arunshriram! Setting up MONster for you, just the way you left it...   ||
+========================================================

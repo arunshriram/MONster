@@ -48,12 +48,13 @@ class DetectorEditor(QWidget):
         self.listwidget = QListWidget()
         self.listwidget.setMaximumWidth(350)
         self.listwidget.setMinimumWidth(250)
-        with open ("Properties.csv", 'rb') as p:
+        with open ("Bookkeeping/Properties.csv", 'rb') as p:
             reader = csv.reader(p)
             prop = dict(reader)
             
         detectors = ast.literal_eval(prop["detectors"])
         self.detectorlist = []
+        self.string_detectorlist = []
         for item in detectors:
             string = item.split(', ')
             name = string[0]
@@ -61,9 +62,11 @@ class DetectorEditor(QWidget):
             height = int(string[2][7:].rstrip())
             detector = Detector(name, width, height)
             self.detectorlist.append(detector)
+            self.string_detectorlist.append(str(detector))
             self.windowreference.detectorList.append(detector)
             self.listwidget.addItem(str(detector))
             self.windowreference.detector_combo.addItem(str(detector))
+            self.windowreference.editor.detector_combo.addItem(str(detector))
             
         
 
@@ -132,27 +135,26 @@ class DetectorEditor(QWidget):
             h.addWidget(self.no)
             self.ly.addLayout(h)
             self.win.setLayout(self.ly)    
-            self.no.clicked.connect(lambda: self.win.close())
+            def hi():
+                self.win.close()
+                self.raise_()
+            self.no.clicked.connect(hi)
             def rem():
                 self.listwidget.takeItem(curRow)
                 self.windowreference.detector_combo.removeItem(curRow)
+                self.windowreference.editor.detector_combo.removeItem(curRow)
                 del self.detectorlist[curRow]
-                inFile = open("Properties.py", 'r')
-                properties = []
-                for line in inFile:
-                    properties.append(line)
-                inFile.close()
-                outFile = open("Properties.py", 'w')
-                for prop in properties:
-                    if "detectors" not in prop:
-                        outFile.write(prop)
-                    else:
-                        hi = []
-                        for d in self.detectorlist:
-                            hi.append(str(d))
-                        outFile.write("detectors = " + str(hi))
-                outFile.close()
+                del self.string_detectorlist[curRow]
+                with open("Bookkeeping/Properties.csv", 'rb') as infile:
+                    reader =csv.reader(infile)
+                    prop = dict(reader)
+                prop['detectors'] = str(self.string_detectorlist)
+                with open("Bookkeeping/Properties.csv", 'wb') as outfile:
+                    writer = csv.writer(outfile)
+                    for key, value in prop.items():
+                        writer.writerow([key, value])
                 self.win.close()
+                self.windowreference.raise_()
             self.ok.clicked.connect(rem)
             self.win.show()
             self.win.raise_()
@@ -189,37 +191,38 @@ class DetectorEditor(QWidget):
             displayError(self, "This detector already exists!")
             return
         self.detectorlist.append(detector)
+        self.string_detectorlist.append(str(detector))
         properties = []
-        inFile = open("Properties.py", 'r')
-        for line in inFile:
-            properties.append(line)
-        inFile.close()
-        outFile = open("Properties.py", 'w')
-        detectors = properties[-1].split("= ")[1]
-        detectors = ast.literal_eval(detectors)
+        with open("Bookkeeping/Properties.csv", 'rb') as inFile:
+            reader = csv.reader(inFile)
+            prop = dict(reader)
+        detectors = ast.literal_eval(prop['detectors'])
         detectors.append(str(detector))
-        properties[-1] = detectors
-        for prop in properties:
-            if prop == properties[-1]:
-                s = "detectors = "
-                prop = s + str(prop)
-            outFile.write(str(prop))
-        outFile.close()  
+        prop['detectors'] = str(detectors)
+        with open("Bookkeeping/Properties.csv", 'wb') as outFile:
+            writer = csv.writer(outFile)
+            for key,value in prop.items():
+                writer.writerow([key, value])
+        
         self.listwidget.addItem(str(detector))
         self.windowreference.detector_combo.addItem(str(detector))
+        self.windowreference.editor.detector_combo.addItem(str(detector))
         
 # This class is the class that governs all things that occur in the GUI window.
 class MONster(QTabWidget):
     def __init__(self):
         QTabWidget.__init__(self)
-        self.write_console = True
+        if not os.path.isdir("Bookkeeping"):
+            os.makedirs("Bookkeeping")
+        self.current_user = getpass.getuser()
         self.macroQueue = [] # list of macros for the queue tab
         self.fileProcessedCount = 0
         self.lineEditStyleSheet ="QLineEdit { border-radius: 4px;  color:rgb(0, 0, 0); background-color: rgb(255, 255, 255); border-style:outset; border-width:4px;  border-radius: 4px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } "
         self.textStyleSheet = "QLabel {background-color : rgb(29, 30, 50); color: white; }"
         self.help_dialog = None
         screenShape = QDesktopWidget().screenGeometry()
-        self.imageWidth = screenShape.height()/2.5
+        self.imageWidth = screenShape.height()/3.5
+        self.properties_OK = False
         mt.generateTransformWidgets(self) 
         ms.generateStitchWidgets(self)
         mi.generateIntegrateWidgets(self)
@@ -233,7 +236,25 @@ class MONster(QTabWidget):
         self.processDone = True # To check if current process in the macro queue is over
        
         count = 0
-        with open("Properties.csv", 'rb') as p:
+        if not os.path.exists("Bookkeeping/Properties.csv"):
+            resetProperties()
+            message = QLabel("Could not locate Properties.csv, so a new file was generated. Please restart MONster.")
+            self.win = QWidget()
+            self.win.setWindowTitle('Properties file corrupted!')
+            self.ok = QPushButton('Ok')
+            self.ly = QVBoxLayout()
+            self.ly.addWidget(message)
+            self.ly.addWidget(self.ok)
+            self.win.setLayout(self.ly)    
+            self.ok.clicked.connect(lambda: sys.exit())
+            #def closeEvent(event):
+                #sys.exit()           
+            #self.win.connect(self.win, SIGNAL('triggered()'), closeEvent )
+            self.win.show()
+            self.win.raise_()
+            return            
+        
+        with open("Bookkeeping/Properties.csv", 'rb') as p:
             reader = csv.reader(p)
             prop = dict(reader)
             for k,v in prop.items():
@@ -249,13 +270,13 @@ class MONster(QTabWidget):
             self.ly.addWidget(self.ok)
             self.win.setLayout(self.ly)    
             self.ok.clicked.connect(lambda: sys.exit())
-            def closeEvent(event):
-                sys.exit()           
-            self.win.connect(self.win, SIGNAL('triggered()'), closeEvent )
+            #def closeEvent(event):
+                #sys.exit()           
+            #self.win.connect(self.win, SIGNAL('triggered()'), closeEvent )
             self.win.show()
             self.win.raise_()
             return
-       
+        self.properties_OK = True
                             
         self.detectorWindow = DetectorEditor(self)
         self.transformThread = TransformThread(self, None, None, None, None, 0)  # initialize the transform thread
@@ -274,6 +295,30 @@ class MONster(QTabWidget):
         self.addTab(self.stitchTab, "Stitch")
         self.addTab(self.integrateTab, "Integrate")
         self.addTab(self.queueTab, "Queue Loader")
+        
+        if os.path.exists("Bookkeeping/thisRun.txt"):
+            self.addToConsole("========================================================")
+            self.addToConsole("||   Welcome, %s! Setting up MONster for you, just the way you left it...   ||" % self.current_user)
+            self.addToConsole("========================================================")            
+            
+        else:
+            self.addToConsole("===============================================================")
+            self.addToConsole("||    Welcome to MONster, %s! No need to be afraid, this MONster's on your side.    ||" % self.current_user)
+            self.addToConsole("===============================================================")
+        now = datetime.datetime.now()
+        months = {1: "January"}
+        months[2] = "February"
+        months[3] = "March"
+        months[4] = "April"
+        months[5] = "May"
+        months[6] = "June"
+        months[7] = "July"
+        months[8] = "August"
+        months[9] = "September"
+        months[10] = "October"
+        months[11] = "November"
+        months[12] = "December"
+        self.addToConsole("The date is %s %d, %s. The time is %d:%d." % (months[now.month], now.day, now.year, now.hour, now.minute))
         self.show()
         self.raise_()
  
@@ -281,7 +326,9 @@ class MONster(QTabWidget):
         ############################################
         ##############CONNECTIONS#################
         ############################################
-        self.data_folder_button.clicked.connect(self.getDataSourceDirectoryPath)
+        self.folder_button.clicked.connect(self.getDataSourceDirectoryPath)
+        
+        self.file_button.clicked.connect(self.getDataSourceFiles)
         
         self.calib_folder_button.clicked.connect(self.getCalibSourcePath)
         
@@ -337,7 +384,9 @@ class MONster(QTabWidget):
         
         self.int_abort.clicked.connect(self.integrateThread.abortClicked)
                 
-        self.int_data_folder_button.clicked.connect(lambda: mi.getIntDataSourceDirectoryPath(self))
+        self.int_folder_button.clicked.connect(lambda: mi.getIntDataSourceDirectoryPath(self))
+        
+        self.int_file_button.clicked.connect(lambda: mi.getIntDataFiles(self))
         
         self.int_processed_location_folder_button.clicked.connect(lambda: mi.setIntProcessedLocation(self))
                 
@@ -347,7 +396,7 @@ class MONster(QTabWidget):
         
         self.stitch_start_button.clicked.connect(lambda: ms.beginStitch(self))
         
-        self.images_select_files_button.clicked.connect(lambda: ms.stitchImageSelect(self))
+        self.stitch_folder_button.clicked.connect(lambda: ms.stitchImageSelect(self))
         
         self.stitch_saveLocation_button.clicked.connect(lambda: ms.setStitchSaveLocation(self))
                 
@@ -370,12 +419,13 @@ class MONster(QTabWidget):
 
         self.queue.itemDoubleClicked.connect(doubleclick)
         self.setStyleSheet("background-color: rgb(29, 30,51);")
+        #self.showFullScreen()
 
         ###########################################
         ###########################
         #Restore default graphs and data from the previous run upon starting MONster
         ###########################
-        # Properties.csv has the following information from previous run(s) (in no particular order):
+        # Bookkeeping/Properties.csv has the following information from previous run(s) (in no particular order):
         #
         #
         # Transform data source
@@ -398,7 +448,11 @@ class MONster(QTabWidget):
             self.addToConsole("No previous run information found!")
             resetProperties()
             return
-        with open('Properties.csv', 'rb') as prop:
+
+        self.console_saver = ConsoleWindow(self)
+        self.console_save_location = str(self.console_saver.save_loc.text())
+
+        with open('Bookkeeping/Properties.csv', 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         try:
@@ -448,10 +502,9 @@ class MONster(QTabWidget):
                 self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")
             if str(self.stitch_saveLocation.text()) == "":
                 self.stitch_saveLocation.setText(str(self.images_select.text())  + "/Processed_Stitch")
-        
+                
+        self.tabBar().setStyleSheet("QTabBar::tab {color: rgb(230, 90, 0);}")
 
-        
-   
         
     # Copies all the information from the transform tab to either the macro editor or the integrate tab.
     def windowTabChanged(self, index):
@@ -471,25 +524,9 @@ class MONster(QTabWidget):
             self.editor.data_source.setText(self.data_source.text())       
             self.editor.int_processed_location.setText(self.int_processed_location.text())
             self.editor.int_data_source.setText(self.int_data_source.text())                   
-            
-            if self.data_source_check.isChecked():
-                self.editor.data_source_check.setChecked(True)
-            else:
-                self.editor.data_source_check.setChecked(False)
-        #elif index == 2:
-            #self.int_detectordistance.setText(self.detectordistance.text())
-            #self.int_detect_tilt_alpha.setText(self.detect_tilt_alpha.text())
-            #self.int_detect_tilt_delta.setText(self.detect_tilt_delta.text())
-            #self.int_dcenterx.setText(self.dcenterx.text())
-            #self.int_dcentery.setText(self.dcentery.text())
-            #self.int_wavelength.setText(self.wavelength.text())
-            #self.int_calib_source.setText(self.calib_source.text())
-            #self.int_processed_location.setText(self.processed_location.text())
-            #self.int_data_source.setText(self.data_source.text())            
-            #if self.data_source_check.isChecked():
-                #self.int_data_source_check.setChecked(True)
-            #else:
-                #self.int_data_source_check.setChecked(False)            
+           
+
+            self.editor.stackList.setCurrentRow(0)
         
     # disables all widgets except abort
     def disableWidgets(self):
@@ -597,12 +634,8 @@ class MONster(QTabWidget):
         self.qconsole.moveCursor(QTextCursor.End)
         self.stitch_console.moveCursor(QTextCursor.End)
         QApplication.processEvents()
-        if self.write_console:
-            if not os.path.isdir("console_messages"):
-                os.makedirs("console_messages")
-            with open("console_messages/console_%s.txt" % datetime.datetime.today().strftime('%Y-%m-%d')
-    , 'a') as console:
-                console.write(message + '\n')
+        
+        
    
     # Loads transform calibration information based on the filename the user selects
     def loadCalibration(self):
@@ -622,39 +655,42 @@ class MONster(QTabWidget):
   
     # Loads the appropriate files based on the data source the user selects
     def getDataSourceDirectoryPath(self):
-        if self.data_source_check.isChecked():
-            try:
-                folderpath = str(QFileDialog.getExistingDirectory())
-                if folderpath != '':
-                    self.data_source.setText(folderpath)
-                    self.data_label.setText("Current data source:")
-                    self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
-                    self.t_files_to_process = [folderpath]
-            except:
-                self.addToConsole("Something went wrong when trying to open your directory.")
-        else:
-            try:
-                
-                filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
-                filenames = [str(filename) for  filename in filenames]
-                if len(filenames) < 2:
-                    self.data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
-                else:
-                    self.data_label.setText("Current data source: (multiple files)")
-                print(filenames)
-                self.data_source.setText(os.path.dirname(filenames[0]))
+        try:
+            folderpath = str(QFileDialog.getExistingDirectory())
+            if folderpath != '':
+                self.data_source.setText(folderpath)
+                self.data_label.setText("Current data source: (folder)")
                 self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
-                self.t_files_to_process = filenames
-            except:
-                #traceback.print_exc()
-                self.addToConsole("Did not select a data source.")
+                self.t_files_to_process = [folderpath]
+            self.raise_()
+        except:
+            self.addToConsole("Something went wrong when trying to open your directory.")
+     
+     # Loads the appropriate files based on the data source the user selects
+    def getDataSourceFiles(self):
+        try:
+            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+            filenames = [str(filename) for  filename in filenames]
+            if len(filenames) < 2:
+                self.data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
+            else:
+                self.data_label.setText("Current data source: (multiple files)")
+            print(filenames)
+            self.data_source.setText(os.path.dirname(filenames[0]))
+            self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.t_files_to_process = filenames
+            self.raise_()
+        except:
+            #traceback.print_exc()
+            self.addToConsole("Did not select a data source.")   
+            
     # Retrieves and loads the calibration information that the user selects
     def getCalibSourcePath(self):
         path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
         if path !='':
             self.calib_source.setText(path)
             self.loadCalibration()
-        
+        self.raise_()
     # Saves the custom calibration that the user enters as a new calibration file
     def saveCalibAction(self):
         name = ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/cal-%s.calib') %(datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S'))
@@ -671,6 +707,7 @@ class MONster(QTabWidget):
                 calib.write("wavelength=" + str(self.wavelength.text()) + '\n')
                 calib.write('-\n')
             self.calib_source.setText(os.path.expanduser(str(fileName)))
+            self.raise_()
         except:
             self.addToConsole("Calibration could not be saved!")
             return
@@ -680,7 +717,7 @@ class MONster(QTabWidget):
     def setRawImage(self, filename):
         try:
             pixmap = QPixmap(filename)
-            if filename == "":
+            if filename == ""or not os.path.exists(filename):
                 pixmap = QPixmap("images/SLAC_LogoSD.png")
                 self.addToConsole("Could not load Qchi image.")
                 
@@ -694,7 +731,7 @@ class MONster(QTabWidget):
         #path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
         if path !='':
             self.processed_location.setText(os.path.join(path, "Processed_Transform"))
-        
+        self.raise_()
     # Returns the number of lines in a file
     def file_len(self, fname):
         with open(fname) as f:
@@ -709,7 +746,8 @@ class MONster(QTabWidget):
         self.bar.setValue(new_val)
         self.int_bar.setValue(new_val)
         self.stitchbar.setValue(new_val)
-           
+        
+  
     # Sets the bar progress to whatever value is passed in
     def setRadialBar(self, bartype, val):
         if bartype == 1:
@@ -763,6 +801,52 @@ def integrate_is_wanted(line):
         return True
     return False     
 
+# This class is a small one that keeps the information of the console log save file location.
+class ConsoleWindow(QWidget):
+    def __init__(self, win):
+        QWidget.__init__(self)
+        self.win = win
+        self.message = QLabel("Please choose a log file save location.")
+        self.setWindowTitle('Console log save location')
+        self.save_loc = QLineEdit()
+        self.save_loc.setMinimumWidth(550)
+        with open('Bookkeeping/Properties.csv', 'rb') as fil:
+            reader = csv.reader(fil)
+            prop = dict(reader)
+        save_loc = prop.get("console_saving")
+        if save_loc is None:
+            self.save_loc.setText("")
+        else:
+            self.save_loc.setText(save_loc)
+
+        self.saveButton = QPushButton("Save")
+        self.cancelButton = QPushButton("Cancel")
+
+        ly = QVBoxLayout()
+        ly.addWidget(self.message)
+        ly.addWidget(self.save_loc)
+        h = QHBoxLayout()
+        h.addWidget(self.cancelButton)
+        h.addWidget(self.saveButton)
+        ly.addLayout(h)
+        self.setLayout(ly)
+
+        def save():
+            self.win.console_save_location = str(self.save_loc.text())
+            with open("Bookkeeping/Properties.csv", 'rb') as fil:
+                reader = csv.reader(fil)
+                prop = dict(reader)
+            prop['console_saving'] = str(self.save_loc.text())
+            with open("Bookkeeping/Properties.csv", 'wb') as fil:
+                writer = csv.writer(fil)
+                for key, val in prop.items():
+                    writer.writerow([key, val])
+            self.close()
+            self.win.raise_()
+        self.saveButton.clicked.connect(save)
+        self.cancelButton.clicked.connect(lambda: self.close())
+
+
 # This class is the governing class, the highest in the hiearchy. Its central widget is the main GUI window. 
 class Menu(QMainWindow):
     def __init__(self):
@@ -770,8 +854,33 @@ class Menu(QMainWindow):
         
         self.form_widget = MONster()
         self.setCentralWidget(self.form_widget)
+        self.setWindowIcon(QIcon('images/appicon.icns'))
+        self.setStyleSheet("""
+                QMenuBar {
+                    background-color: rgb(29,30,51);
+                    color: rgb(255,255,255);
+                    border: 1px solid #000;
+                }
         
+                QMenuBar::item {
+                    background-color: rgb(29,30,51);
+                    color: rgb(255,255,255);
+                }
         
+                QMenuBar::item::selected {
+                    background-color: rgb(29,30,51);
+                }
+        
+                QMenu {
+                    background-color: rgb(29,30,51);
+                    color: rgb(255,255,255);
+                    border: 1px solid #000;           
+                }
+        
+                QMenu::item::selected {
+                    background-color: rgb(29,30,51);
+                }
+    """)        
         self.updateUi()
         
     def updateUi(self):
@@ -780,7 +889,7 @@ class Menu(QMainWindow):
         file = bar.addMenu('File')
         edit = bar.addMenu("Edit")
         help = bar.addMenu("Click me for answers to your problems")
-        console_action = QAction('Toggle Console Text File Saving', self)
+        console_action = QAction('Change log file save location', self)
         
         
         save_action = QAction('Save', self)
@@ -808,46 +917,88 @@ class Menu(QMainWindow):
         clear_prop.triggered.connect(self.clearProperties)
         help_a.triggered.connect(self.openHelpDialog)
         def console():
-            self.form_widget.write_console = not self.form_widget.write_console
-            with open ("Properties.csv", 'rb') as p:
-                reader = csv.reader(p)
-                prop = dict(reader)
-            if "True" in prop["console_saving"]:
-                prop["console_saving"] = "False"
-            else:
-                prop["console_saving"] = "True"
-            with open("Properties.csv", 'wb') as p:
-                writer = csv.writer(p)
-                for key, val in prop.items():
-                    writer.writerow([key, val])
+            self.form_widget.console_saver.show()
+            self.form_widget.console_saver.raise_()
+
+
+
 
         console_action.triggered.connect(console)
         def stupidpoopypants():
             self.form_widget.detectorWindow.show()
             self.form_widget.detectorWindow.raise_()
         detectors.triggered.connect(stupidpoopypants)
-        self.setWindowTitle('MONster')
+        self.setWindowTitle('SSRL: MONster - v1.1')
         
-        self.setStyleSheet("background-color: rgb(29, 30,51);")
+        #self.setStyleSheet("background-color: rgb(29, 30,51);")
         
         self.show()
         self.raise_()
-        self.setFixedSize(self.minimumSizeHint())
+        #self.setFixedSize(self.minimumSizeHint())
+        screenShape = QDesktopWidget().screenGeometry()
+        self.form_widget.imageWidth = screenShape.height()/3
+        #self.setMaximumHeight(screenShape.height())        
+        #self.showFullScreen()
         
     def setHelpDialog(self, hd):
         self.help_dialog = hd
         self.form_widget.help_dialog = hd
+        if not os.path.exists("Bookkeeping/thisRun.txt") and self.form_widget.properties_OK:
+            self.help_dialog.show()
+            self.help_dialog.raise_()        
     def openHelpDialog(self):
         self.help_dialog.show()
         self.help_dialog.raise_()
 
+    # event -> None
+    # Prompts the user for console saving upon closing MONster
+    def closeEvent(self, event):
+        
+        message = QLabel("Would you like to save this session's console log in the specified save path?")
+        event.ignore()
+        self.win = QWidget()
+        self.win.setWindowTitle('Console log saving')
+        self.ok = QPushButton('Yes, please!')
+        self.no = QPushButton("Cancel")
+        self.quit = QPushButton("Quit without saving console logs")
+        self.ly = QVBoxLayout()
+        self.ly.addWidget(message)
+        self.ly.addWidget(QLabel(self.form_widget.console_save_location))
+        h = QHBoxLayout()
+        h.addWidget(self.no)
+        h.addWidget(self.quit)
+        h.addWidget(self.ok)
+        self.ly.addLayout(h)
+        self.win.setLayout(self.ly)    
+        self.win.show()
+        self.win.raise_()
+        QApplication.processEvents()
+        def saveconsole():
+            save_path = self.form_widget.console_save_location.rstrip()
+            logs = str(self.form_widget.console.toPlainText())
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            pathname = os.path.join(save_path, "console_%s.txt" % datetime.datetime.today().strftime('%Y-%m-%d'))
+            with open(pathname, 'a') as console:
+                    console.write(logs)
+            sys.exit()
+        self.ok.clicked.connect(saveconsole)
+        def showmon():
+            event.ignore()
+            self.form_widget.show()
+            self.form_widget.raise_()
+            self.win.close()
+        self.no.clicked.connect(showmon)
+        self.quit.clicked.connect(lambda: sys.exit())
+
+
         
     def clearProperties(self):
         try:
-            with open("Properties.csv", 'rb') as p:
+            with open("Bookkeeping/Properties.csv", 'rb') as p:
                 reader = csv.reader(p)
                 prop = dict(reader)
-            with open("Properties.csv", 'wb') as p:
+            with open("Bookkeeping/Properties.csv", 'wb') as p:
                 writer = csv.writer(p)
                 prop["t_data_source"] = ""
                 prop["s_data_source"] = ""
@@ -872,7 +1023,7 @@ class Menu(QMainWindow):
             return
 def resetProperties():
     try:
-        with open("Properties.csv", 'wb') as p:
+        with open("Bookkeeping/Properties.csv", 'wb') as p:
             writer = csv.writer(p)
             prop = {"t_data_source" :  ""}
             prop["s_data_source"] = ""
@@ -896,7 +1047,7 @@ def resetProperties():
         return
 def propertiesAreClear():
     clear = True
-    with open('Properties.csv', 'rb') as prop:
+    with open('Bookkeeping/Properties.csv', 'rb') as prop:
         reader = csv.reader(prop)
         Properties = dict(reader)
         for key, value in Properties.items():
@@ -905,10 +1056,6 @@ def propertiesAreClear():
                     clear = False
                     break
     return clear
-        
-
-  
-        
         
 def main():
     app = QApplication(sys.argv)

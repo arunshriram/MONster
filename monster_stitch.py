@@ -31,11 +31,14 @@ def generateStitchWidgets(self):
     self.images_select = ClickableLineEdit()
     self.images_select.setFixedWidth(580)
     self.images_select.setStyleSheet(self.lineEditStyleSheet)
-    self.images_select_files_button = QPushButton()
-    self.images_select_files_button.setIcon(QIcon('images/folder_select.png'))
-    self.images_select_files_button.setIconSize(QSize(25, 25))
-    self.images_select_files_button.setFixedSize(25, 25)
+    self.images_select_files_button = QLabel()
+    self.images_select_files_button.setFixedSize(25, 25)    
+    self.images_select_files_button.setPixmap(QPixmap('images/folder_select.png').scaled(self.images_select_files_button.sizeHint().width(), self.images_select_files_button.sizeHint().height()))
     self.images_select_files_button.setStyleSheet('border: none;')
+    self.stitch_folder_button = QPushButton("Select a folder")
+    self.stitch_folder_button.setFixedSize(self.stitch_folder_button.sizeHint().width(), self.stitch_folder_button.sizeHint().height())
+    self.stitch_folder_button.setStyleSheet("background-color: rgb(159, 97, 100);")
+     
     self.stitch_abort = QPushButton('Abort Stitching')
     self.stitch_abort.setStyleSheet("background-color: rgb(255, 140, 140);")              
     self.stitch_abort.resize(self.stitch_abort.sizeHint().width(), self.stitch_abort.sizeHint().height())
@@ -49,9 +52,9 @@ def generateStitchWidgets(self):
     self.stitch_saveLocation.setFixedWidth(580)
     self.stitch_saveLocation_button = QPushButton()
     self.stitch_saveLocation_button.setIcon(QIcon("images/folder_select.png"))
-    self.stitch_saveLocation_button.setFixedSize(25 ,25)
+    self.stitch_saveLocation_button.setFixedSize(35 ,35)
     self.stitch_saveLocation_button.setIconSize(QSize(25, 25))
-    self.stitch_saveLocation_button.setStyleSheet("border: none;")
+    self.stitch_saveLocation_button.setStyleSheet('background-color: rgba(34, 200, 157, 100)');     
 
     self.stitch_start_button = QPushButton('Begin Stitching!')
     self.stitch_start_button.setStyleSheet('background-color: rgb(80, 230, 133);')
@@ -76,7 +79,7 @@ def generateStitchWidgets(self):
     
     self.stitch_console = QTextBrowser()
     self.stitch_console.setMinimumHeight(150)
-    self.stitch_console.setMaximumHeight(300)
+    self.stitch_console.setMaximumHeight(400)
     self.stitch_console.moveCursor(QTextCursor.End)
     self.stitch_data_label = QLabel("Current data folder:")
     self.stitch_data_label.setStyleSheet("QLabel {color: white;}")
@@ -112,6 +115,7 @@ def generateStitchLayout(self):
     v_box.addWidget(self.stitch_data_label)
     fileSelect.addWidget(self.images_select)
     fileSelect.addWidget(self.images_select_files_button)
+    fileSelect.addWidget(self.stitch_folder_button)
     fileSelect.addStretch()
     v_box.addLayout(fileSelect)
     v_box.addWidget(self.saveLabel)
@@ -185,7 +189,7 @@ def saveStitchMacro(self, fileName=''):
     name = (final_dir + '/macro-%s.csv') %(cur_time)        
     fileName = QFileDialog.getSaveFileName(self, 'Save your new macro!', name)
     fileName = str(fileName)
-
+    self.raise_()
     if fileName == '':
         self.raise_()
         return
@@ -214,16 +218,53 @@ def saveStitchMacro(self, fileName=''):
 # Begins stitch processing, parsing the relevant fields, making sure that the user has entered
 # all fields correctly, and then loading and starting the StitchThread
 def beginStitch(self):
-    self.disableWidgets()
     self.stitch_console.moveCursor(QTextCursor.End)
     QApplication.processEvents()
     # self.console.clear()
 
+    if self.transformThread.isRunning() or self.integrateThread.isRunning():
+        self.addToConsole("Stop! You're giving me too much to do! Cannot run multiple processes at once.")
+        return
     self.addToConsole('****************************************************')
     self.addToConsole('********** Beginning Stitch Processing... ***********')
     self.addToConsole('****************************************************')
     QApplication.processEvents()
-    
+    save_path = str(self.stitch_saveLocation.text())
+    self.overwrite = False
+    self.clicked = False
+    if os.path.exists(save_path):
+        message = QLabel("Warning! This processed file destination already exists! Are you sure you want to overwrite it?")
+        self.win = QWidget()
+        self.win.setWindowTitle('Careful!')
+        self.yes = QPushButton('Yes')
+        self.no = QPushButton('No')
+        self.ly = QVBoxLayout()
+        self.ly.addWidget(message)
+        h = QHBoxLayout()
+        h.addWidget(self.yes)
+        h.addWidget(self.no)
+        self.ly.addLayout(h)
+        self.win.setLayout(self.ly)    
+        def n():
+            self.clicked = True
+            self.win.close()
+            self.raise_()        
+        self.no.clicked.connect(n)
+       
+        def y():
+            self.overwrite = True
+            self.clicked = True
+            self.win.close()
+            self.raise_()
+        self.yes.clicked.connect(y)
+        self.win.show()
+        self.win.raise_()
+        while not self.clicked:
+            time.sleep(.3)
+            QApplication.processEvents()
+        if not self.overwrite: 
+            return
+    self.disableWidgets()
     
     if not os.path.exists(str(self.images_select.text())):
         self.addToConsole("Please select a valid data source!")
@@ -261,6 +302,7 @@ def stitchImageSelect(self):
             self.images_select.setText(folderpath)
             self.stitch_saveLocation.setText(os.path.join(folderpath, "Processed_Stitch"))
             self.stitch_files_to_process = folderpath
+        self.raise_()
     except:
         self.addToConsole("Something went wrong when trying to open your directory.")
         return
@@ -291,7 +333,7 @@ def stitchDone(self, loopTime):
 def setStitchImage(self, filename):
     try:
         pixmap = QPixmap(filename)   
-        if filename == "":
+        if filename == "" or not os.path.exists(filename):
             pixmap = QPixmap("images/SLAC_LogoSD.png", "1")
             self.addToConsole("Could not load stitched image.")
             
@@ -308,7 +350,7 @@ def setStitchSaveLocation(self):
     path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files"))
     if path !='':
         self.stitch_saveLocation.setText(os.path.join(path, "Processed_Stitch"))
-      
+    self.raise_()
 # None -> None
 # Resets the stitch image to the SLAC Logo
 def resetStitch(self):

@@ -114,7 +114,11 @@ class StitchThread(QThread):
             self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Error: Could not load the first scan file!")
 
             return
-        Q1 = data['Q']
+        try:
+            Q1 = data['Q']
+        except:
+            self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "Error: Incorrect matlab file! Could not locate the Q values.")
+            return
         chi1 = data['chi']
         minq = np.ndarray.min(Q1)
         minchi = np.ndarray.min(chi1)
@@ -140,9 +144,10 @@ class StitchThread(QThread):
         save_path = self.savePath
         if os.path.exists(save_path):
             shutil.rmtree(save_path)    
-        
+
         os.makedirs(save_path)
-          
+        os.makedirs(os.path.join(save_path, "Stitched_Mat"))
+        os.makedirs(os.path.join(save_path, "Stitched_Image"))          
         for p in range(numphi):
             Qchi0raw = np.zeros((lchi0int, lq0int))
             Qchi0 = np.zeros((lchi0int, lq0int))
@@ -223,13 +228,13 @@ class StitchThread(QThread):
                     #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
                     #self.emit(SIGNAL( "addToConsole(PyQt_PyObject)"), "Image %s: shape of Qchi0raw: %s, max is %s, min is %s" % (x, str(np.shape(Qchi0raw)), np.max(Qchi0raw), np.min(Qchi0raw)))
                     #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
-                    with open("thisRun.txt", 'w') as runFile:
+                    with open("Bookkeeping/thisRun.txt", 'w') as runFile:
                         runFile.write("s_data_source, " + str(self.dataPath) + "\n")
                         runFile.write("s_processed_loc, " + str(self.savePath) + "\n")
                         imageFilename = os.path.basename(fullname)
                         i = imageFilename.find("scan")
                         imageFilename = imageFilename[:i-1]                    
-                        name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
+                        name = os.path.join(os.path.join(save_path, "Stitched_Image"), os.path.splitext(imageFilename)[0]+'_gamma')
                         runFile.write("stitch_image, " + name + ".png\n")
                 except:
                     nonStitchedFiles.append(os.path.basename(fullname))
@@ -293,7 +298,7 @@ class StitchThread(QThread):
 
         
     def save_Qchi(self, Q, chi, cake, imageFilename, save_path):
-        scipy.io.savemat(os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_Qchi.mat'), {'Q':Q, 'chi':chi, 'cake':cake})
+        scipy.io.savemat(os.path.join(os.path.join(save_path, "Stitched_Mat"), os.path.splitext(imageFilename)[0]+'_Qchi.mat'), {'Q':Q, 'chi':chi, 'cake':cake})
         Q, chi = np.meshgrid(Q, chi)
     
         fig = plt.figure(1)
@@ -312,10 +317,13 @@ class StitchThread(QThread):
         plt.colorbar()
         i = imageFilename.find("scan")
         imageFilename = imageFilename[:i-1]
-        name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
+        name = os.path.join(os.path.join(save_path, "Stitched_Image"), os.path.splitext(imageFilename)[0]+'_gamma')
         plt.savefig(name, dpi=300)
         plt.close()
-        self.emit(SIGNAL("setImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
+        if not name.endswith('.png'):
+            self.emit(SIGNAL("setImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name + '.png')
+        else:
+            self.emit(SIGNAL("setImage(PyQt_PyObject, PyQt_PyObject)"), self.windowreference, name)
 
 
 def extents(f):
@@ -327,12 +335,12 @@ def writeStitchProperties():
     try:
         properties = []
 
-        with open('Properties.csv', 'rb') as prop:
+        with open('Bookkeeping/Properties.csv', 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         detectors = Properties["detectors"]
      
-        with open("thisRun.txt", 'r') as thisrun:
+        with open("Bookkeeping/thisRun.txt", 'r') as thisrun:
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
@@ -390,7 +398,7 @@ def writeStitchProperties():
         property_dict["detectors"] = detectors
     
 
-        with open("Properties.csv", 'wb') as prop:
+        with open("Bookkeeping/Properties.csv", 'wb') as prop:
             writer = csv.writer(prop)
             for key, value in property_dict.items():
                 writer.writerow([key, value])    

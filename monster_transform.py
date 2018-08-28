@@ -28,22 +28,21 @@ def generateTransformWidgets(self):
     self.raw_image.setPixmap(pixmap.scaled(self.imageWidth, self.imageWidth, Qt.KeepAspectRatio))
     self.raw_image.setStyleSheet("QLabel { border-style:outset; border-width:10px;  border-radius: 10px; border-color: rgb(34, 200, 157); color:rgb(0, 0, 0); background-color: rgb(200, 200, 200); } ")
 
-    self.data_label = QLabel("Current data source:")
+    self.data_label = QLabel("Current data source: (folder)")
     self.data_label.setStyleSheet(self.textStyleSheet)
     self.data_source = ClickableLineEdit()
     self.data_source.setStyleSheet(self.lineEditStyleSheet)
     
     self.data_source.setFixedWidth(580)
-    self.data_folder_button = QPushButton()
-    self.data_folder_button.setIcon(QIcon('images/folder_select.png'))
-    self.data_folder_button.setIconSize(QSize(25, 25))
-    self.data_folder_button.setFixedSize(25, 25)
-    self.data_folder_button.setStyleSheet('border: none;')
 
-    self.data_source_check = QCheckBox("I'm going to select a folder")
-    self.data_source_check.setStyleSheet("QCheckBox {color: white; }")
+
+    self.folder_button = QPushButton("Select a folder")
+    self.folder_button.setFixedSize(self.folder_button.sizeHint().width(), self.folder_button.sizeHint().height())
+    self.folder_button.setStyleSheet("background-color: rgb(159, 97, 100);")
     
-    self.data_source_check.setChecked(True)
+    self.file_button = QPushButton("Select one or more files")
+    self.file_button.setFixedSize(self.file_button.sizeHint().width(), self.file_button.sizeHint().height())
+    self.file_button.setStyleSheet("background-color: rgb(248, 222, 189);")
 
     self.t_files_to_process = []
     self.calib_label = QLabel("Current calibration file source:")
@@ -55,10 +54,10 @@ def generateTransformWidgets(self):
     self.calib_folder_button = QPushButton()
     self.calib_folder_button.setIcon(QIcon('images/folder_select.png'))
     self.calib_folder_button.setIconSize(QSize(25, 25))
-    self.calib_folder_button.setFixedSize(25, 25)
-    self.calib_folder_button.setStyleSheet('border: none;')
+    self.calib_folder_button.setFixedSize(35, 35)
+    self.calib_folder_button.setStyleSheet('background-color: rgba(34, 200, 157, 100)');     
     
-    self.processed_location_label = QLabel("Current location for processed files:")
+    self.processed_location_label = QLabel("Destination for processed files:")
     self.processed_location_label.setStyleSheet(self.textStyleSheet)
     self.processed_location = ClickableLineEdit(os.path.join(str(self.data_source.text()), "Processed_Transform"))
     self.processed_location.setStyleSheet(self.lineEditStyleSheet)
@@ -66,8 +65,8 @@ def generateTransformWidgets(self):
     self.processed_location_folder_button = QPushButton()
     self.processed_location_folder_button.setIcon(QIcon('images/folder_select.png'))
     self.processed_location_folder_button.setIconSize(QSize(25, 25))
-    self.processed_location_folder_button.setFixedSize(25, 25)
-    self.processed_location_folder_button.setStyleSheet('border: none;')
+    self.processed_location_folder_button.setFixedSize(35, 35)
+    self.processed_location_folder_button.setStyleSheet('background-color: rgba(34, 200, 157, 100)');     
 
     self.start_button = QPushButton("Begin Transform")
     self.start_button.setStyleSheet("background-color: rgb(80, 230, 133);")    
@@ -81,7 +80,7 @@ def generateTransformWidgets(self):
 
     self.console = QTextBrowser()
     self.console.setMinimumHeight(150)
-    self.console.setMaximumHeight(300)
+    self.console.setMaximumHeight(400)
     self.console.setFont(QFont("Avenir", 14))
     self.console.moveCursor(QTextCursor.End)
     self.console.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")                
@@ -191,8 +190,8 @@ def generateTransformLayout(self):
     h_box2 = QHBoxLayout()
     h_box2.addWidget(self.data_source)
     #h_box2.addStretch()
-    h_box2.addWidget(self.data_folder_button)
-    h_box2.addWidget(self.data_source_check)
+    h_box2.addWidget(self.folder_button)
+    h_box2.addWidget(self.file_button)
     h_box2.addStretch()
 
 
@@ -238,6 +237,13 @@ def generateTransformLayout(self):
     v_box = QVBoxLayout()
     v_box.addLayout(h_box1)
     v_box.addWidget(self.data_label)
+    x = QLabel("Data source directory:")
+    x.setStyleSheet("color: white;")
+    line = QFrame()
+    line.setFrameShape(QFrame.HLine)
+    line.setStyleSheet("color: white;")
+    v_box.addWidget(line)
+    v_box.addWidget(x)
     v_box.addLayout(h_box2)
     v_box.addWidget(self.calib_label)
     v_box.addLayout(h_box3)
@@ -311,12 +317,12 @@ def saveTransformMacro(self, fileName=''):
         t_calib_source = str(self.calib_source.text())
 
         data_source = str(self.data_source.text())
-        if self.data_source_check.isChecked() and os.path.isfile(self.t_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
-        elif not self.data_source_check.isChecked() and os.path.isdir(self.t_files_to_process[0]):
-            displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
-            return
+        #if self.data_source_check.isChecked() and os.path.isfile(self.t_files_to_process[0]):
+            #displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
+            #return
+        #elif not self.data_source_check.isChecked() and os.path.isdir(self.t_files_to_process[0]):
+            #displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
+            #return
         if data_source == "":
             displayError(self, "Please select a transform data source!")
             return
@@ -343,7 +349,7 @@ def saveTransformMacro(self, fileName=''):
     name = (final_dir + '/macro-%s.csv') %(cur_time)        
     fileName = QFileDialog.getSaveFileName(self, 'Save your new macro!', name)
     fileName = str(fileName)
-
+    self.raise_()
     if fileName == '':
         self.raise_()
         return
@@ -364,14 +370,21 @@ def saveTransformMacro(self, fileName=''):
 # Begins transform processing, parsing the relevant fields, making sure that the user has entered
 # all fields correctly, and then loading and starting the TransformThread
 def transformThreadStart(self):
-    # Check if the user has correctly selected either a folder or a group of files
-    
-    if not self.data_source_check.isChecked() and os.path.isdir(self.t_files_to_process[0]):
-        self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
-        self.enableWidgets()
-        return
 
-    self.disableWidgets()
+    if self.stitchThread.isRunning() or self.stitchThread.isRunning():
+        self.addToConsole("Stop! You're giving me too much to do! Cannot run multiple processes at once.")
+        return    
+    # Check if the user has correctly selected either a folder or a group of files
+    if self.t_files_to_process == []:
+        self.addToConsole("Please make sure you select the files you wish to process.")
+        self.t_files_to_process = [str(self.data_source.text())]
+        self.enableWidgets()
+        return        
+    #if not self.data_source_check.isChecked() and os.path.isdir(self.t_files_to_process[0]):
+        #self.addToConsole("Please make sure you select the files you wish to process, or check the \"I'm going to select a folder\" box.")
+        #self.enableWidgets()
+        #return
+
     self.console.moveCursor(QTextCursor.End)
     QApplication.processEvents()
     self.console.clear()
@@ -384,11 +397,47 @@ def transformThreadStart(self):
     #root.withdraw()
 
 
-
+    save_path = str(self.processed_location.text())
+    self.overwrite = False
+    self.clicked = False
+    if os.path.exists(save_path):
+        message = QLabel("Warning! This processed file destination already exists! Are you sure you want to overwrite it?")
+        self.win = QWidget()
+        self.win.setWindowTitle('Careful!')
+        self.yes = QPushButton('Yes')
+        self.no = QPushButton('No')
+        self.ly = QVBoxLayout()
+        self.ly.addWidget(message)
+        h = QHBoxLayout()
+        h.addWidget(self.yes)
+        h.addWidget(self.no)
+        self.ly.addLayout(h)
+        self.win.setLayout(self.ly)    
+        def n():
+            self.clicked = True
+            self.win.close()
+            self.raise_()        
+        self.no.clicked.connect(n)
+       
+        def y():
+            self.overwrite = True
+            self.clicked = True
+            self.win.close()
+            self.raise_()
+        self.yes.clicked.connect(y)
+        self.win.show()
+        self.win.raise_()
+        while not self.clicked:
+            time.sleep(.3)
+            QApplication.processEvents()
+        if not self.overwrite: 
+            return
+    self.disableWidgets()
+    
     calibPath = str(self.calib_source.text())
     dataPath = str(self.data_source.text())
-    if  os.path.isdir(dataPath) and self.data_source_check.isChecked():
-        self.t_files_to_process = [dataPath]
+    #if  os.path.isdir(dataPath) and self.data_source_check.isChecked():
+        #self.t_files_to_process = [dataPath]
     # Check if entered calibration information is correctly entered
     if (calibPath is '' and str(self.detectordistance.text()) == '' and str(self.dcenterx.text()) == '' and str(self.dcentery.text()) == '' and str(self.detect_tilt_alpha.text()) == '' and str(self.detect_tilt_delta.text()) == '' and str(self.wavelength.text()) == '') or dataPath is '':
 
@@ -402,6 +451,7 @@ def transformThreadStart(self):
         self.win.addToConsole('No bkgd file supplied, aborting...')
         return
 
+   
     self.addToConsole('Calibration File: ' + calibPath)
     self.addToConsole('Folder to process: ' + dataPath)
     self.addToConsole('')        

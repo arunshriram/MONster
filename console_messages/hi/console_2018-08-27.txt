@@ -1,0 +1,22 @@
+********************************************************
+********** Beginning Integrate Processing... ***********
+********************************************************
+Please make sure you have entered appropriate values for the QRange and the ChiRange.********************************************************
+********** Beginning Transform Processing... ***********
+********************************************************
+Calibration File: /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+Folder to process: /Users/arunshriram/Documents/SLAC Internship/test_data/test
+
+Using detector PILATUS3 X 100K-A
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0298.tif
+k5_022318_1_24x24_t45_0298.tif detected, processing
+k5_022318_1_24x24_t45_0298.tif completed
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0299.tif
+k5_022318_1_24x24_t45_0299.tif detected, processing
+k5_022318_1_24x24_t45_0299.tif completed
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0300.tif
+k5_022318_1_24x24_t45_0300.tif detected, processing
+k5_022318_1_24x24_t45_0300.tif completed
+/Users/arunshriram/Documents/SLAC Internship/test_data/test/k5_022318_1_24x24_t45_0301.tif
+k5_022318_1_24x24_t45_0301.tif detected, processing
+Process aborted! Completing any processes that were already started...

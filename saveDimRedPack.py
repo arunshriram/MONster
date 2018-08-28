@@ -15,7 +15,7 @@ import os.path
 import scipy.io
 
 def save_Qchi(Q, chi, cake, imageFilename, save_path):
-    scipy.io.savemat(os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_Qchi.mat'), {'Q':Q, 'chi':chi, 'cake':cake})
+    scipy.io.savemat(os.path.join(os.path.join(save_path, "Transformed_Mat"), os.path.splitext(imageFilename)[0]+'_Qchi.mat'), {'Q':Q, 'chi':chi, 'cake':cake})
     Q, chi = np.meshgrid(Q, chi)
 
     plt.figure(1)
@@ -31,7 +31,7 @@ def save_Qchi(Q, chi, cake, imageFilename, save_path):
     plt.clim(scipy.stats.scoreatpercentile(np.log(cake[inds]), 5),
              scipy.stats.scoreatpercentile(np.log(cake[inds]), 95))
     plt.colorbar()
-    name = os.path.join(save_path, os.path.splitext(imageFilename)[0]+'_gamma')
+    name = os.path.join(os.path.join(save_path, "Transformed_Images"), os.path.splitext(imageFilename)[0]+'_gamma')
     plt.savefig(name, dpi=300)
     plt.close()
 

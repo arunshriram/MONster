@@ -1,0 +1,10 @@
+stitch,False
+workflow,False
+transform,False
+qmax,6.0
+chimin,-20.0
+i_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform/Processed_Integrate
+qmin,1.0
+chimax,20.0
+integrate,True
+i_data_source,['/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform']
