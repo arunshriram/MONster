@@ -48,7 +48,7 @@ class DetectorEditor(QWidget):
         self.listwidget = QListWidget()
         self.listwidget.setMaximumWidth(350)
         self.listwidget.setMinimumWidth(250)
-        with open ("Bookkeeping/Properties.csv", 'rb') as p:
+        with open ("~/Bookkeeping/Properties.csv", 'rb') as p:
             reader = csv.reader(p)
             prop = dict(reader)
             
@@ -145,11 +145,11 @@ class DetectorEditor(QWidget):
                 self.windowreference.editor.detector_combo.removeItem(curRow)
                 del self.detectorlist[curRow]
                 del self.string_detectorlist[curRow]
-                with open("Bookkeeping/Properties.csv", 'rb') as infile:
+                with open("~/Bookkeeping/Properties.csv", 'rb') as infile:
                     reader =csv.reader(infile)
                     prop = dict(reader)
                 prop['detectors'] = str(self.string_detectorlist)
-                with open("Bookkeeping/Properties.csv", 'wb') as outfile:
+                with open("~/Bookkeeping/Properties.csv", 'wb') as outfile:
                     writer = csv.writer(outfile)
                     for key, value in prop.items():
                         writer.writerow([key, value])
@@ -193,13 +193,13 @@ class DetectorEditor(QWidget):
         self.detectorlist.append(detector)
         self.string_detectorlist.append(str(detector))
         properties = []
-        with open("Bookkeeping/Properties.csv", 'rb') as inFile:
+        with open("~/Bookkeeping/Properties.csv", 'rb') as inFile:
             reader = csv.reader(inFile)
             prop = dict(reader)
         detectors = ast.literal_eval(prop['detectors'])
         detectors.append(str(detector))
         prop['detectors'] = str(detectors)
-        with open("Bookkeeping/Properties.csv", 'wb') as outFile:
+        with open("~/Bookkeeping/Properties.csv", 'wb') as outFile:
             writer = csv.writer(outFile)
             for key,value in prop.items():
                 writer.writerow([key, value])
@@ -212,8 +212,8 @@ class DetectorEditor(QWidget):
 class MONster(QTabWidget):
     def __init__(self):
         QTabWidget.__init__(self)
-        if not os.path.isdir("Bookkeeping"):
-            os.makedirs("Bookkeeping")
+        if not os.path.isdir("~/Bookkeeping"):
+            os.makedirs("~/Bookkeeping")
         self.current_user = getpass.getuser()
         self.macroQueue = [] # list of macros for the queue tab
         self.fileProcessedCount = 0
@@ -236,7 +236,21 @@ class MONster(QTabWidget):
         self.processDone = True # To check if current process in the macro queue is over
        
         count = 0
-        if not os.path.exists("Bookkeeping/Properties.csv"):
+        if not os.path.exists("~/Bookkeeping"):
+            self.win = QWidget()
+            self.win.setWindowTitle("Error!")
+            message = "Could not locate Bookkeeping folder in home directory! It's just been created again. Please restart MONster."
+            self.ok = QPushButton("Ok")
+            lay = QVBoxLayout()
+            lay.addWidget(QLabel(message))
+            lay.addWidget(self.ok)
+            os.makedirs("~/Bookkeeping")
+            resetProperties()
+            self.ok.clicked.connect(lambda: sys.exit())
+            self.win.setLayout(lay)
+            self.win.show()
+            self.win.raise_()
+        if not os.path.exists("~/Bookkeeping/Properties.csv"):
             resetProperties()
             message = QLabel("Could not locate Properties.csv, so a new file was generated. Please restart MONster.")
             self.win = QWidget()
@@ -254,7 +268,7 @@ class MONster(QTabWidget):
             self.win.raise_()
             return            
         
-        with open("Bookkeeping/Properties.csv", 'rb') as p:
+        with open("~/Bookkeeping/Properties.csv", 'rb') as p:
             reader = csv.reader(p)
             prop = dict(reader)
             for k,v in prop.items():
@@ -296,7 +310,7 @@ class MONster(QTabWidget):
         self.addTab(self.integrateTab, "Integrate")
         self.addTab(self.queueTab, "Queue Loader")
         
-        if os.path.exists("Bookkeeping/thisRun.txt"):
+        if os.path.exists("~/Bookkeeping/thisRun.txt"):
             self.addToConsole("========================================================")
             self.addToConsole("||   Welcome, %s! Setting up MONster for you, just the way you left it...   ||" % self.current_user)
             self.addToConsole("========================================================")            
@@ -318,7 +332,7 @@ class MONster(QTabWidget):
         months[10] = "October"
         months[11] = "November"
         months[12] = "December"
-        self.addToConsole("The date is %s %d, %s. The time is %d:%d." % (months[now.month], now.day, now.year, now.hour, now.minute))
+        self.addToConsole("The date is %s %s, %s. The time is %s:%s." % (months[now.month], '{:02d}'.format(now.day), now.year, '{:02d}'.format(now.hour), '{:02d}'.format(now.minute)))
         self.show()
         self.raise_()
  
@@ -418,14 +432,14 @@ class MONster(QTabWidget):
                 self.editor.raise_()
 
         self.queue.itemDoubleClicked.connect(doubleclick)
-        self.setStyleSheet("background-color: rgb(29, 30,51);")
+        self.setStyleSheet("background-color: rgb(29, 30,51); color:white;")
         #self.showFullScreen()
 
         ###########################################
         ###########################
         #Restore default graphs and data from the previous run upon starting MONster
         ###########################
-        # Bookkeeping/Properties.csv has the following information from previous run(s) (in no particular order):
+        # ~/Bookkeeping/Properties.csv has the following information from previous run(s) (in no particular order):
         #
         #
         # Transform data source
@@ -447,12 +461,12 @@ class MONster(QTabWidget):
         if propertiesAreClear():
             self.addToConsole("No previous run information found!")
             resetProperties()
-            return
+            
 
         self.console_saver = ConsoleWindow(self)
         self.console_save_location = str(self.console_saver.save_loc.text())
 
-        with open('Bookkeeping/Properties.csv', 'rb') as prop:
+        with open('~/Bookkeeping/Properties.csv', 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         try:
@@ -473,7 +487,7 @@ class MONster(QTabWidget):
             if os.path.exists(Properties["t_processed_loc"]):
                 self.processed_location.setText(Properties["t_processed_loc"])
             else:
-                self.processed_location.setText(str(self.data_source.text()) + "/Processed_Transform")
+                self.processed_location.setText(str(self.data_source.text()).lstrip().rstrip() + "/Processed_Transform")
             if os.path.exists(Properties["s_processed_loc"]):
                 self.stitch_saveLocation.setText(Properties["s_processed_loc"])
             else:
@@ -481,7 +495,7 @@ class MONster(QTabWidget):
             if os.path.exists(Properties["i_processed_loc"]):
                 self.int_processed_location.setText(Properties["i_processed_loc"])
             else:
-                self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")                
+                self.int_processed_location.setText(str(self.int_data_source.text()).lstrip().rstrip() + "/Processed_Integrate")                
                 
             self.setRawImage(Properties["two_d_image"])
             ms.setStitchImage(self, Properties["stitch_image"])
@@ -497,9 +511,9 @@ class MONster(QTabWidget):
             self.setRawImage('images/SLAC_LogoSD.png')
             mi.set1DImage(self, 'images/SLAC_LogoSD.png')       
             if str(self.processed_location.text()) == "":
-                self.processed_location.setText(str(self.data_source.text()) + "/Processed_Transform")
+                self.processed_location.setText(str(self.data_source.text()).lstrip().rstrip() + "/Processed_Transform")
             if str(self.int_processed_location.text()) == "":
-                self.int_processed_location.setText(str(self.int_data_source.text()) + "/Processed_Integrate")
+                self.int_processed_location.setText(str(self.int_data_source.text()).lstrip().rstrip() + "/Processed_Integrate")
             if str(self.stitch_saveLocation.text()) == "":
                 self.stitch_saveLocation.setText(str(self.images_select.text())  + "/Processed_Stitch")
                 
@@ -660,7 +674,7 @@ class MONster(QTabWidget):
             if folderpath != '':
                 self.data_source.setText(folderpath)
                 self.data_label.setText("Current data source: (folder)")
-                self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                self.processed_location.setText(str(self.data_source.text()).lstrip().rstrip()  + "/Processed_Transform")
                 self.t_files_to_process = [folderpath]
             self.raise_()
         except:
@@ -677,7 +691,7 @@ class MONster(QTabWidget):
                 self.data_label.setText("Current data source: (multiple files)")
             print(filenames)
             self.data_source.setText(os.path.dirname(filenames[0]))
-            self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.processed_location.setText(str(self.data_source.text()).lstrip().rstrip()  + "/Processed_Transform")
             self.t_files_to_process = filenames
             self.raise_()
         except:
@@ -727,7 +741,9 @@ class MONster(QTabWidget):
             return
     # Asks the user for the location where the processed files should go          
     def setProcessedLocation(self):
-        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.data_source.text())))
+        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.data_source.text()).lstrip().rstrip()))
+        if path.endswith('/untitled'):
+            path = path[:len(path) - 9]
         #path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
         if path !='':
             self.processed_location.setText(os.path.join(path, "Processed_Transform"))
@@ -786,6 +802,11 @@ def displayError(self, message):
     self.ok.clicked.connect(lambda: self.win.close())
     self.win.show()
     self.win.raise_()
+    frameGm = self.frameGeometry()
+    screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+    centerPoint = QApplication.desktop().screenGeometry(screen).center()
+    frameGm.moveCenter(centerPoint)
+    self.win.move(frameGm.topLeft())
     
 
 
@@ -810,7 +831,7 @@ class ConsoleWindow(QWidget):
         self.setWindowTitle('Console log save location')
         self.save_loc = QLineEdit()
         self.save_loc.setMinimumWidth(550)
-        with open('Bookkeeping/Properties.csv', 'rb') as fil:
+        with open('~/Bookkeeping/Properties.csv', 'rb') as fil:
             reader = csv.reader(fil)
             prop = dict(reader)
         save_loc = prop.get("console_saving")
@@ -830,14 +851,19 @@ class ConsoleWindow(QWidget):
         h.addWidget(self.saveButton)
         ly.addLayout(h)
         self.setLayout(ly)
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
 
         def save():
             self.win.console_save_location = str(self.save_loc.text())
-            with open("Bookkeeping/Properties.csv", 'rb') as fil:
+            with open("~/Bookkeeping/Properties.csv", 'rb') as fil:
                 reader = csv.reader(fil)
                 prop = dict(reader)
             prop['console_saving'] = str(self.save_loc.text())
-            with open("Bookkeeping/Properties.csv", 'wb') as fil:
+            with open("~/Bookkeeping/Properties.csv", 'wb') as fil:
                 writer = csv.writer(fil)
                 for key, val in prop.items():
                     writer.writerow([key, val])
@@ -898,7 +924,7 @@ class Menu(QMainWindow):
         #saveplot_action.setShortcut('Ctrl+Alt+S')
         clear_prop = QAction("Clear previous run information", self)
         help_a = QAction("Open the help dialog!", self)
-        quit_action = QAction('Quit', self)
+        quit_action = QAction('Hard Quit', self)
         quit_action.setShortcut('Ctrl+Q')
     
 
@@ -912,7 +938,8 @@ class Menu(QMainWindow):
         #file.addAction(saveplot_action)
         file.addAction(quit_action)
         help.addAction(help_a)
-        
+        def quit():
+            qApp.quit()
         quit_action.triggered.connect(lambda: qApp.quit())
         clear_prop.triggered.connect(self.clearProperties)
         help_a.triggered.connect(self.openHelpDialog)
@@ -943,7 +970,7 @@ class Menu(QMainWindow):
     def setHelpDialog(self, hd):
         self.help_dialog = hd
         self.form_widget.help_dialog = hd
-        if not os.path.exists("Bookkeeping/thisRun.txt") and self.form_widget.properties_OK:
+        if not os.path.exists("~/Bookkeeping/thisRun.txt") and self.form_widget.properties_OK:
             self.help_dialog.show()
             self.help_dialog.raise_()        
     def openHelpDialog(self):
@@ -975,6 +1002,11 @@ class Menu(QMainWindow):
         QApplication.processEvents()
         def saveconsole():
             save_path = self.form_widget.console_save_location.rstrip()
+            if save_path == '':
+                if not os.path.exists("console_messages"):
+                    os.makedirs("console_messages") 
+                save_path = "console_messages"
+                
             logs = str(self.form_widget.console.toPlainText())
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
@@ -995,10 +1027,10 @@ class Menu(QMainWindow):
         
     def clearProperties(self):
         try:
-            with open("Bookkeeping/Properties.csv", 'rb') as p:
+            with open("~/Bookkeeping/Properties.csv", 'rb') as p:
                 reader = csv.reader(p)
                 prop = dict(reader)
-            with open("Bookkeeping/Properties.csv", 'wb') as p:
+            with open("~/Bookkeeping/Properties.csv", 'wb') as p:
                 writer = csv.writer(p)
                 prop["t_data_source"] = ""
                 prop["s_data_source"] = ""
@@ -1014,7 +1046,7 @@ class Menu(QMainWindow):
                 prop["qmax"] = ""
                 prop["chimin"] = ""
                 prop["chimax"] = ""
-                prop["console_saving"] = "True"
+                prop["console_saving"] = ""
                 prop["detectors"] = "['PILATUS3 X 100K-A, Width: 487, Height: 195', 'PILATUS3 X 200K-A, Width: 487, Height: 407', 'PILATUS3 X 300K, Width: 487, Height: 619', 'PILATUS3 X 300K-W, Width: 1475, Height: 195', 'PILATUS3 X 1M, Width: 981, Height: 1043', 'PILATUS3 X 2M, Width: 1485, Height: 1679', 'PILATUS3 X 6M, Width: 2463, Height: 2527', 'MX225-HE, Width: 6144, Height: 6144']"
                 for key, value in prop.items():
                     writer.writerow([key, value])
@@ -1023,7 +1055,7 @@ class Menu(QMainWindow):
             return
 def resetProperties():
     try:
-        with open("Bookkeeping/Properties.csv", 'wb') as p:
+        with open("~/Bookkeeping/Properties.csv", 'wb') as p:
             writer = csv.writer(p)
             prop = {"t_data_source" :  ""}
             prop["s_data_source"] = ""
@@ -1039,7 +1071,7 @@ def resetProperties():
             prop["qmax"] = ""
             prop["chimin"] = ""
             prop["chimax"] = ""
-            prop["console_saving"] = "True"
+            prop["console_saving"] = ""
             prop["detectors"] = "['PILATUS3 X 100K-A, Width: 487, Height: 195', 'PILATUS3 X 200K-A, Width: 487, Height: 407', 'PILATUS3 X 300K, Width: 487, Height: 619', 'PILATUS3 X 300K-W, Width: 1475, Height: 195', 'PILATUS3 X 1M, Width: 981, Height: 1043', 'PILATUS3 X 2M, Width: 1485, Height: 1679', 'PILATUS3 X 6M, Width: 2463, Height: 2527', 'MX225-HE, Width: 6144, Height: 6144']"
             for key, value in prop.items():
                 writer.writerow([key, value])
@@ -1047,7 +1079,7 @@ def resetProperties():
         return
 def propertiesAreClear():
     clear = True
-    with open('Bookkeeping/Properties.csv', 'rb') as prop:
+    with open('~/Bookkeeping/Properties.csv', 'rb') as prop:
         reader = csv.reader(prop)
         Properties = dict(reader)
         for key, value in Properties.items():

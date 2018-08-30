@@ -1,0 +1,16 @@
+one_d_image,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1/Transformed_Mat/Processed_Integrate-arun/Integrated_CSVs/k5_022318_1_24x24_t45_0298_Qchi_1D.csv
+console_saving,/Users/arunshriram/Documents/SLAC Internship/MONster/console_messages/hi
+t_data_source,/Users/arunshriram/Documents/SLAC Internship/test_data/test
+t_calib_source,/Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
+detectors,"['PILATUS3 X 100K-A, Width: 487, Height: 195', 'PILATUS3 X 200K-A, Width: 487, Height: 407', 'PILATUS3 X 300K, Width: 487, Height: 619', 'PILATUS3 X 300K-W, Width: 1475, Height: 195', 'PILATUS3 X 1M, Width: 981, Height: 1043', 'PILATUS3 X 2M, Width: 1485, Height: 1679', 'PILATUS3 X 6M, Width: 2463, Height: 2527', 'MX225-HE, Width: 6144, Height: 6144']"
+qmax,6.0
+two_d_image,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1/Transformed_Images/k5_022318_1_24x24_t45_0304_gamma.png
+i_processed_loc,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1/Transformed_Mat/Processed_Integrate-arun
+stitch_image,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1/Processed_Stitch/Stitched_Image/k5_022318_1_24x24_t45_0306_Qchi_gamma.png
+qmin,1.0
+t_processed_loc,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1
+chimax,20.0
+chimin,-20.0
+i_data_source,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1/Transformed_Mat
+s_processed_loc,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1/Processed_Stitch
+s_data_source,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1/Transformed_Mat

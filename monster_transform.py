@@ -38,11 +38,11 @@ def generateTransformWidgets(self):
 
     self.folder_button = QPushButton("Select a folder")
     self.folder_button.setFixedSize(self.folder_button.sizeHint().width(), self.folder_button.sizeHint().height())
-    self.folder_button.setStyleSheet("background-color: rgb(159, 97, 100);")
+    self.folder_button.setStyleSheet("background-color: rgb(159, 97, 100); color: black;")
     
     self.file_button = QPushButton("Select one or more files")
     self.file_button.setFixedSize(self.file_button.sizeHint().width(), self.file_button.sizeHint().height())
-    self.file_button.setStyleSheet("background-color: rgb(248, 222, 189);")
+    self.file_button.setStyleSheet("background-color: rgb(248, 222, 189); color: black;")
 
     self.t_files_to_process = []
     self.calib_label = QLabel("Current calibration file source:")
@@ -69,12 +69,12 @@ def generateTransformWidgets(self):
     self.processed_location_folder_button.setStyleSheet('background-color: rgba(34, 200, 157, 100)');     
 
     self.start_button = QPushButton("Begin Transform")
-    self.start_button.setStyleSheet("background-color: rgb(80, 230, 133);")    
+    self.start_button.setStyleSheet("background-color: rgb(80, 230, 133); color: black;")    
     # self.start_button.setFixedSize(160, 30)
     self.start_button.resize(self.start_button.sizeHint().width(), self.start_button.sizeHint().height())
 
     self.abort = QPushButton('Abort Transform')
-    self.abort.setStyleSheet("background-color: rgb(255, 140, 140);")              
+    self.abort.setStyleSheet("background-color: rgb(255, 140, 140); color: black;")              
     # self.abort.setFixedSize(100, 30)
     self.abort.resize(self.abort.sizeHint().width(), self.abort.sizeHint().height())
 
@@ -132,13 +132,13 @@ def generateTransformWidgets(self):
     self.transform_saveMacroButton = QPushButton("Save as a macro")
     # self.transform_saveMacroButton.setMaximumWidth(160)
     # self.transform_saveMacroButton.setFixedHeight(30)
-    self.transform_saveMacroButton.setStyleSheet("background-color: rgb(255, 251, 208);")
+    self.transform_saveMacroButton.setStyleSheet("background-color: rgb(255, 251, 208); color: black;")
     self.transform_addToQueueButton = QPushButton("Add this configuration to the queue")
     # self.transform_addToQueueButton.setMaximumWidth(220)
     # self.transform_addToQueueButton.setFixedHeight(30)
     self.transform_saveMacroButton.resize(self.transform_saveMacroButton.sizeHint().width(), self.transform_saveMacroButton.sizeHint().height())
 
-    self.transform_addToQueueButton.setStyleSheet("background-color: rgb(255, 207, 117);")
+    self.transform_addToQueueButton.setStyleSheet("background-color: rgb(255, 207, 117); color: black;")
     self.transform_addToQueueButton.resize(self.transform_addToQueueButton.sizeHint().width(), self.transform_addToQueueButton.sizeHint().height())
 
     

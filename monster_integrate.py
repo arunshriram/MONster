@@ -69,11 +69,11 @@ def generateIntegrateWidgets(self):
 
     self.int_folder_button = QPushButton("Select a folder")
     self.int_folder_button.setFixedSize(self.int_folder_button.sizeHint().width(), self.int_folder_button.sizeHint().height())
-    self.int_folder_button.setStyleSheet("background-color: rgb(159, 97, 100);")
+    self.int_folder_button.setStyleSheet("background-color: rgb(159, 97, 100); color: black;")
     
     self.int_file_button = QPushButton("Select one or more files")
     self.int_file_button.setFixedSize(self.int_file_button.sizeHint().width(), self.int_file_button.sizeHint().height())
-    self.int_file_button.setStyleSheet("background-color: rgb(248, 222, 189);")
+    self.int_file_button.setStyleSheet("background-color: rgb(248, 222, 189); color: black;")
     
     self.miconsole.setFont(QFont("Avenir", 14))
     self.miconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")               
@@ -106,12 +106,12 @@ def generateIntegrateWidgets(self):
     self.chi_max.setFixedWidth(65)    
     
     self.int_start_button = QPushButton("Begin Integration")
-    self.int_start_button.setStyleSheet("background-color: rgb(80, 230, 133);")    
+    self.int_start_button.setStyleSheet("background-color: rgb(80, 230, 133); color: black;")    
     # self.int_start_button.setFixedSize(160, 30)
     self.int_start_button.resize(self.int_start_button.sizeHint().width(), self.int_start_button.sizeHint().height())
 
     self.int_abort = QPushButton('Abort Integration')
-    self.int_abort.setStyleSheet("background-color: rgb(255, 140, 140);")              
+    self.int_abort.setStyleSheet("background-color: rgb(255, 140, 140); color: black;")              
     # self.int_abort.setFixedSize(150, 30)
     self.int_abort.resize(self.int_abort.sizeHint().width(), self.int_abort.sizeHint().height())
 
@@ -131,7 +131,7 @@ def generateIntegrateWidgets(self):
     
     self.int_processed_location_label = QLabel("Destination for processed files:")
     self.int_processed_location_label.setStyleSheet(self.textStyleSheet)
-    self.int_processed_location = ClickableLineEdit(str(self.int_data_source.text())  + "/Processed_Integrate")
+    self.int_processed_location = ClickableLineEdit(str(self.int_data_source.text()).lstrip().rstrip()  + "/Processed_Integrate")
     self.int_processed_location.setStyleSheet(self.lineEditStyleSheet)
     
     self.int_processed_location.setFixedWidth(580)
@@ -158,13 +158,13 @@ def generateIntegrateWidgets(self):
     self.integrate_saveMacroButton = QPushButton("Save as a macro")
     # self.integrate_saveMacroButton.setMaximumWidth(160)
     # self.integrate_saveMacroButton.setFixedHeight(30)
-    self.integrate_saveMacroButton.setStyleSheet("background-color: rgb(255, 251, 208);")
+    self.integrate_saveMacroButton.setStyleSheet("background-color: rgb(255, 251, 208); color: black;")
     self.integrate_saveMacroButton.resize(self.integrate_saveMacroButton.sizeHint().width(), self.integrate_saveMacroButton.sizeHint().height())
 
     self.integrate_addToQueueButton = QPushButton("Add this configuration to the queue")
     # self.integrate_addToQueueButton.setMaximumWidth(220)
     # self.integrate_addToQueueButton.setFixedHeight(30)
-    self.integrate_addToQueueButton.setStyleSheet("background-color: rgb(255, 207, 117);")  
+    self.integrate_addToQueueButton.setStyleSheet("background-color: rgb(255, 207, 117); color: black;")  
     self.integrate_addToQueueButton.resize(self.integrate_addToQueueButton.sizeHint().width(), self.integrate_addToQueueButton.sizeHint().height())
 
     
@@ -343,7 +343,7 @@ def integrateThreadStart(self):
         #self.enableWidgets()
         #return
     if self.i_files_to_process == []:
-        self.i_files_to_process = [str(self.int_data_source.text())]
+        self.i_files_to_process = [str(self.int_data_source.text()).lstrip().rstrip()]
         self.int_data_label.setText("Current data source: (folder)")
     self.miconsole.moveCursor(QTextCursor.End)
     QApplication.processEvents()
@@ -412,7 +412,7 @@ def integrateThreadStart(self):
         self.enableWidgets()
         return      
 
-    dataPath = str(self.int_data_source.text())
+    dataPath = str(self.int_data_source.text()).lstrip().rstrip()
     if  os.path.isdir(dataPath):
         self.i_files_to_process = [dataPath]        
         
@@ -469,15 +469,15 @@ def saveIntegrateMacro(self, fileName=''):
     macrodict["integrate"] = 'True'
     try:
         if str(self.int_processed_location.text()) == "":
-            self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()), "Processed_Integrate"))
+            self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()).lstrip().rstrip(), "Processed_Integrate"))
 
         if self.i_files_to_process == []:
-            self.i_files_to_process = [str(self.int_data_source.text())]
+            self.i_files_to_process = [str(self.int_data_source.text()).lstrip().rstrip()]
             i_filenames = self.i_files_to_process
         else:
             i_filenames = self.i_files_to_process    
 
-        data_source = str(self.int_data_source.text())
+        data_source = str(self.int_data_source.text()).lstrip().rstrip()
         #if self.int_data_source_check.isChecked() and os.path.isfile(self.i_files_to_process[0]):
             #displayError(self, "Please either check the \"I'm going to select a folder\" option or select at least one file.")
             #return
@@ -531,7 +531,7 @@ def saveIntegrateMacro(self, fileName=''):
     if os.path.isfile(self.i_files_to_process[0]):
         i_filenames += self.i_files_to_process
     elif os.path.isdir(self.i_files_to_process[0]):
-        i_filenames = [str(self.int_data_source.text())]
+        i_filenames = [str(self.int_data_source.text()).lstrip().rstrip()]
     else:
         displayError(self, "Could not locate integrate data source!")
         return
@@ -593,7 +593,9 @@ def getIntDataFiles(self):
 # None -> None
 # Sets the processed location path for integration
 def setIntProcessedLocation(self):
-    path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text())))
+    path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text()).lstrip().rstrip()))
+    if path.endswith('/untitled'):
+        path = path[:len(path) - 9]    
     if path !='':
         self.int_processed_location.setText(os.path.join(path, "Processed_Integrate"))
     self.raise_()

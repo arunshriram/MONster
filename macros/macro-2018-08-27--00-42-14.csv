@@ -1,8 +1,0 @@
-stitch,False
-workflow,False
-t_data_source,['/Users/arunshriram/Documents/SLAC Internship/test_data/test']
-t_calib_source,/Users/arunshriram/Documents/SLAC Internship/MONster/calib/arunscal-2-2018-08-27--00-33-38.calib
-detector_type,PILATUS3 X 200K-A
-transform,True
-integrate,False
-t_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1

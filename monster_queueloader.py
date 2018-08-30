@@ -42,6 +42,9 @@ class Macro():
     def isWorkflow(self):
         return "True" in self.mdict['workflow']
 
+    def isTransformIntegrate(self):
+        return "True" in self.mdict['transform_integrate']
+
     def getFilename(self):
         return self.filename
     
@@ -128,13 +131,13 @@ class MacroEditor(QWidget):
         self.stackList.setSpacing(20)
      
         self.saveButton = QPushButton("Save this macro")
-        self.saveButton.setMaximumWidth(180)
+        self.saveButton.setFixedSize(self.saveButton.sizeHint().width(), self.saveButton.sizeHint().height())
         self.cancelButton = QPushButton("Cancel")
-        self.cancelButton.setMaximumWidth(180)
+        self.cancelButton.setFixedSize(self.cancelButton.sizeHint().width(), self.cancelButton.sizeHint().height())
         self.addToQueueButton = QPushButton("Add this macro the queue!")
-        self.addToQueueButton.setMaximumWidth(180)
+        self.addToQueueButton.setFixedSize(self.addToQueueButton.sizeHint().width(), self.addToQueueButton.sizeHint().height())
         self.loadMacroButton = QPushButton("Load a macro")
-        self.loadMacroButton.setMaximumWidth(180)
+        self.loadMacroButton.setFixedSize(self.loadMacroButton.sizeHint().width(), self.loadMacroButton.sizeHint().height())
         self.macroSelected = QLabel("Current macro selected: ")
         self.tipLabel = QLabel("Note: Always save any changes you make before adding to the queue! Unsaved changes will not update the macro.")
 
@@ -226,8 +229,48 @@ class MacroEditor(QWidget):
         self.transformCheck = QCheckBox("Transform")
         self.stitchCheck = QCheckBox("Stitch")
         self.integrateCheck = QCheckBox("Integrate") 
+        self.transform_integrate = False
+        def check():
+            if self.transformCheck.isChecked() and self.integrateCheck.isChecked() and self.independent.isChecked():
+                win = QWidget()
+                layout = QVBoxLayout()
+                message = "Would you like to integrate the files that you transform?"
+                yes = QPushButton("Yes")
+                no = QPushButton("No")
+                layout.addWidget(QLabel(message))
+                h = QHBoxLayout()
+                h.addWidget(no)
+                h.addWidget(yes)
+                layout.addLayout(h)
+                win.setLayout(layout)
+                win.show()
+                win.raise_()
+                def yesclicked():
+                    self.transform_integrate = True
+                    self.int_data_source.setDisabled(True)
+                    self.int_processed_location.setDisabled(True)
+                    self.int_folder_button.setDisabled(True)
+                    self.int_file_button.setDisabled(True)
+                    self.int_processed_location_folder_button.setDisabled(True)
+                    self.transform_integrate_label.setText("Integrate tranformed files: On")
+                    win.close()
+                def noclicked():
+                    self.transform_integrate = False
+                    win.close()
+                yes.clicked.connect(yesclicked)
+                no.clicked.connect(noclicked)
+            else:
+                self.transform_integrate = False
+                self.int_data_source.setEnabled(True)
+                self.int_processed_location.setEnabled(True)
+                self.int_folder_button.setEnabled(True)
+                self.int_file_button.setEnabled(True)
+                self.int_processed_location_folder_button.setEnabled(True)
+                self.transform_integrate_label.setText("Integrate tranformed files: Off")
 
-        
+
+        self.transformCheck.stateChanged.connect(check)
+        self.integrateCheck.stateChanged.connect(check)
 
         self.workflow = QRadioButton("Workflow")
         self.independent = QRadioButton("Independent")
@@ -235,7 +278,7 @@ class MacroEditor(QWidget):
         self.workflowClicked()
         self.workflow.clicked.connect(self.workflowClicked)
         self.independent.clicked.connect(self.independentClicked)
-
+        self.transform_integrate_label = QLabel("Integrate tranformed files: Off")
         
         vbox = QVBoxLayout()
         h = QHBoxLayout()
@@ -259,6 +302,7 @@ class MacroEditor(QWidget):
         line.setFrameShape(QFrame.VLine)
         hbox.addWidget(line)
         hbox.addLayout(independent)
+        hbox.addWidget(self.transform_integrate_label)
         vbox.addLayout(hbox)
         vbox.addWidget(self.transformCheck)
         vbox.addWidget(self.stitchCheck)
@@ -268,7 +312,7 @@ class MacroEditor(QWidget):
         self.welcome.setLayout(h)
         
     def stack1UI(self):
-        self.data_label = QLabel("Current data source:")
+        self.data_label = QLabel("Current data source: (folder)")
         #self.data_source = QLineEdit("/Users/arunshriram/Documents/SLAC Internship/test")
         self.data_source = ClickableLineEdit()
         self.data_source.setFixedWidth(580)
@@ -580,7 +624,7 @@ class MacroEditor(QWidget):
             if folderpath != '':
                 self.data_source.setText(folderpath)
                 self.data_label.setText("Current data source: (folder)")
-                self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                self.processed_location.setText(str(self.data_source.text()).lstrip().rstrip()  + "/Processed_Transform")
                 self.t_files_to_process = [folderpath]
             self.raise_()
         except:
@@ -597,7 +641,7 @@ class MacroEditor(QWidget):
                 self.data_label.setText("Current data source: (multiple files)")
             print(filenames)
             self.data_source.setText(os.path.dirname(filenames[0]))
-            self.processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.processed_location.setText(str(self.data_source.text()).lstrip().rstrip()  + "/Processed_Transform")
             self.t_files_to_process = filenames
             self.raise_()
         except:
@@ -611,7 +655,7 @@ class MacroEditor(QWidget):
             if folderpath != '':
                 self.int_data_source.setText(folderpath)
                 self.int_data_label.setText("Current data source: (folder)")
-                self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+                self.int_processed_location.setText(str(self.data_source.text()).lstrip().rstrip()  + "/Processed_Transform")
                 self.i_files_to_process = [folderpath]
                 self.raise_()
         except:
@@ -628,7 +672,7 @@ class MacroEditor(QWidget):
                 self.int_data_label.setText("Current data source: (multiple files)")
             print(filenames)
             self.int_data_source.setText(os.path.dirname(filenames[0]))
-            self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.int_processed_location.setText(str(self.data_source.text()).lstrip().rstrip()  + "/Processed_Transform")
             self.i_files_to_process = filenames
             self.raise_()
         except:
@@ -643,13 +687,17 @@ class MacroEditor(QWidget):
         self.raise_()
             
     def setProcessedLocation(self):
-        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.data_source.text())))
+        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.data_source.text()).lstrip().rstrip()))
+        if path.endswith('/untitled'):
+            path = path[:len(path) - 9]        
         if path !='':
             self.processed_location.setText(os.path.join(path, "Processed_Transform"))
         self.raise_()
         
     def setIntProcessedLocation(self):
-        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text())))
+        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", str(self.int_data_source.text()).lstrip().rstrip()))
+        if path.endswith('/untitled'):
+            path = path[:len(path) - 9]        
         if path !='':
             self.int_processed_location.setText(os.path.join(path, "Processed_Integrate"))
         self.raise_()
@@ -694,16 +742,16 @@ class MacroEditor(QWidget):
             displayError(self, "Please make sure you select a calibration source or save your custom calibration!")
             return        
         if str(self.processed_location.text()) == "":
-                self.processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Transform"))
+                self.processed_location.setText(os.path.join(str(self.data_source.text()).lstrip().rstrip(), "Processed_Transform"))
 
         if self.t_files_to_process == []:
-            self.t_files_to_process = [str(self.data_source.text())]
+            self.t_files_to_process = [str(self.data_source.text()).lstrip().rstrip()]
             t_filenames = self.t_files_to_process
         else:
             t_filenames = self.t_files_to_process    
         t_calib_source = str(self.calib_source.text())
 
-        data_source = str(self.data_source.text())
+        data_source = str(self.data_source.text()).lstrip().rstrip()
 
         if data_source == "":
             displayError(self, "Please select a transform data source!")
@@ -714,15 +762,15 @@ class MacroEditor(QWidget):
     def checkIntegrateValues(self):
 
         if str(self.int_processed_location.text()) == "":
-                self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()), "Processed_Integrate"))
+                self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()).lstrip().rstrip(), "Processed_Integrate"))
 
         if self.i_files_to_process == []:
-            self.i_files_to_process = [str(self.int_data_source.text())]
+            self.i_files_to_process = [str(self.int_data_source.text()).lstrip().rstrip()]
             i_filenames = self.i_files_to_process
         else:
             i_filenames = self.i_files_to_process    
 
-        data_source = str(self.int_data_source.text())
+        data_source = str(self.int_data_source.text()).lstrip().rstrip()
        
         if data_source == "":
             displayError(self, "Please select a integrate data source!")
@@ -880,16 +928,16 @@ class MacroEditor(QWidget):
         if not transform and not stitch and not integrate:
             displayError(self, "Please select either Transform, Stitch, or Integrate!")        
             return
-        if transform and not os.path.exists(str(self.data_source.text())):
+        if transform and not os.path.exists(str(self.data_source.text()).lstrip().rstrip()):
             displayError(self, "Please select an existing transform data source directory.")
             return
         else:
-            self.t_files_to_process = [str(self.data_source.text())]
-        if integrate and not os.path.exists(str(self.int_data_source.text())):
+            self.t_files_to_process = [str(self.data_source.text()).lstrip().rstrip()]
+        if integrate and not os.path.exists(str(self.int_data_source.text()).lstrip().rstrip()):
             displayError(self, "Please select an existing integrate data source directory.")
             return
         else:
-            self.i_files_to_process = [str(self.int_data_source.text())]
+            self.i_files_to_process = [str(self.int_data_source.text()).lstrip().rstrip()]
         
        
        
@@ -897,6 +945,7 @@ class MacroEditor(QWidget):
         macrodict['transform'] = str(transform)
         macrodict["stitch"] = str(stitch)
         macrodict["integrate"] = str(integrate)
+        macrodict['transform_integrate'] = str(self.transform_integrate)
             
         if stitch:
             s_data_source = str(self.images_select.text())
@@ -913,7 +962,7 @@ class MacroEditor(QWidget):
             if os.path.isfile(self.i_files_to_process[0]):
                 i_filenames += self.i_files_to_process
             elif os.path.isdir(self.i_files_to_process[0]):
-                i_filenames = [str(self.int_data_source.text())]
+                i_filenames = [str(self.int_data_source.text()).lstrip().rstrip()]
             else:
                 displayError(self, "Could not locate integrate data source!")
                 return
@@ -993,7 +1042,7 @@ class MacroEditor(QWidget):
                 if os.path.exists(t_proc_dir):
                     self.processed_location.setText(t_proc_dir)
                 else:
-                    self.processed_location.setText(os.path.join(str(self.data_source.text()), "Processed_Transform"))
+                    self.processed_location.setText(os.path.join(str(self.data_source.text()).lstrip().rstrip(), "Processed_Transform"))
                 detector = macrodict['detector_type']
                 index = 0
                 for i in range(len(self.detectorList)):
@@ -1012,6 +1061,11 @@ class MacroEditor(QWidget):
                 transform = "True" in macrodict['transform']
                 stitch = "True" in macrodict['stitch']
                 integrate = "True" in macrodict['integrate']
+                self.transform_integrate = "True" in macrodict['transform_integrate']
+                if self.transform_integrate:
+                    self.transform_integrate_label.setText("Integrate transformed files: On")
+                else:
+                    self.transform_integrate_label.setText("Integrate transformed files: Off")
                 if transform:
                     self.transformCheck.setChecked(True)
                     try:
@@ -1152,35 +1206,35 @@ def generateQueueWidgets(self):
     self.qconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")           
     self.startQueueButton = QPushButton("Start queue")
     # self.startQueueButton.setFixedWidth(150)
-    self.startQueueButton.setStyleSheet("background-color: rgb(100, 215, 76);")
+    self.startQueueButton.setStyleSheet("background-color: rgb(100, 215, 76); color: black;")
     self.startQueueButton.resize(self.startQueueButton.sizeHint().width(), self.startQueueButton.sizeHint().height())
 
 
     self.stopQueueButton = QPushButton("Terminate Queue")
-    self.stopQueueButton.setStyleSheet("background: rgb(255, 100, 100);")
+    self.stopQueueButton.setStyleSheet("background: rgb(255, 100, 100); color: black;")
     # self.stopQueueButton.setFixedWidth(150)
     self.stopQueueButton.resize(self.stopQueueButton.sizeHint().width(), self.stopQueueButton.sizeHint().height())
 
 
     self.pauseQueueButton = QPushButton("Pause Queue")
-    self.pauseQueueButton.setStyleSheet("background: rgb(230, 150, 150);")
+    self.pauseQueueButton.setStyleSheet("background: rgb(230, 150, 150); color: black;")
     # self.pauseQueueButton.setFixedWidth(150)
     self.pauseQueueButton.resize(self.pauseQueueButton.sizeHint().width(), self.pauseQueueButton.sizeHint().height())
 
     self.resumeQueueButton = QPushButton("Resume Queue")
-    self.resumeQueueButton.setStyleSheet("background: rgb(100, 255, 100);")
+    self.resumeQueueButton.setStyleSheet("background: rgb(100, 255, 100); color: black;")
     # self.resumeQueueButton.setFixedWidth(150)
     self.resumeQueueButton.resize(self.resumeQueueButton.sizeHint().width(), self.resumeQueueButton.sizeHint().height())
    
 
     self.saveQueueButton = QPushButton("Save this queue")
-    self.saveQueueButton.setStyleSheet("background: rgb(142, 210, 201);")
+    self.saveQueueButton.setStyleSheet("background: rgb(142, 210, 201); color: black;")
     # self.saveQueueButton.setFixedWidth(150)
     self.saveQueueButton.resize(self.saveQueueButton.sizeHint().width(), self.saveQueueButton.sizeHint().height())
 
 
     self.loadQueueButton = QPushButton("Load a queue")
-    self.loadQueueButton.setStyleSheet("background: rgb(252, 244, 217);")
+    self.loadQueueButton.setStyleSheet("background: rgb(252, 244, 217);color: black;")
     # self.loadQueueButton.setFixedWidth(150)
     self.loadQueueButton.resize(self.loadQueueButton.sizeHint().width(), self.loadQueueButton.sizeHint().height())
 
@@ -1312,7 +1366,7 @@ def beginQueue(self):
     for macro in self.macroQueue:
         self.queue.setCurrentRow(macrindex)
         self.addToConsole("Processing %s..." % os.path.basename(str(macro.getFilename())))
-        if macro.isWorkflow():
+        if macro.isWorkflow() or macro.isTransformIntegrate():
 
             #  ************ TRANSFORM PROCESSING ******************
             if self.queue_abort:
@@ -1341,30 +1395,30 @@ def beginQueue(self):
             time.sleep(1.5) # let the user have a chance to look at the graph lol
             #progress += increment
             #self.queue_bar.setValue(progress)
-            
-            # **************** STITCH PROCESSING *********************
-            if self.queue_abort:
-                self.addToConsole("Aborting queue...")
-                self.addToConsole("Congratulations, you just killed the queue.")
-                break
-            if self.queue_pause:
-                self.addToConsole("Pausing queue...")
-                self.addToConsole("Queue is paused!")
-                while (self.queue_pause):
-                    time.sleep(.4)
-                    QApplication.processEvents()
-            dataFiles = [os.path.join(processed_filedir, "Transformed_Mat")]    
+            if not macro.isTransformIntegrate():
+                # **************** STITCH PROCESSING *********************
+                if self.queue_abort:
+                    self.addToConsole("Aborting queue...")
+                    self.addToConsole("Congratulations, you just killed the queue.")
+                    break
+                if self.queue_pause:
+                    self.addToConsole("Pausing queue...")
+                    self.addToConsole("Queue is paused!")
+                    while (self.queue_pause):
+                        time.sleep(.4)
+                        QApplication.processEvents()
+                dataFiles = [os.path.join(processed_filedir, "Transformed_Mat")]    
 
-            s_processed_filedir = os.path.join(processed_filedir, "Processed_Stitch")    
-            
-            startStitchThread(self, dataFiles[0], s_processed_filedir, increment)
-            while self.processDone == False:
-                time.sleep(.2)
-                QApplication.processEvents()     
-            time.sleep(1.5)
+                s_processed_filedir = os.path.join(processed_filedir, "Processed_Stitch")    
                 
-            #progress += increment
-            #self.queue_bar.setValue(progress)            
+                startStitchThread(self, dataFiles[0], s_processed_filedir, increment)
+                while self.processDone == False:
+                    time.sleep(.2)
+                    QApplication.processEvents()     
+                time.sleep(1.5)
+                    
+                #progress += increment
+                #self.queue_bar.setValue(progress)            
 
             # **************** INTEGRATE PROCESSING **************
             if self.queue_abort:
@@ -1728,14 +1782,15 @@ def calculateMacroQueueIncrement(self):
                     thismacrocount += len(fileList)
                 else:
                     return
-            if macro.shouldStitch():
-                dataFiles = macro.getSDataFiles()
-                fileList = sorted(glob.glob(os.path.join(dataFiles, '*.mat')))
-                if len(fileList) == 0:
-                    thismacrocount += 0
-                else:
-                    thismacrocount += len(fileList)
-                    thismacrocount += 1
+            if not macro.isTransformIntegrate():
+                if macro.shouldStitch():
+                    dataFiles = macro.getSDataFiles()
+                    fileList = sorted(glob.glob(os.path.join(dataFiles, '*.mat')))
+                    if len(fileList) == 0:
+                        thismacrocount += 0
+                    else:
+                        thismacrocount += len(fileList)
+                        thismacrocount += 1
 
             if macro.shouldIntegrate():
                 dataFiles = macro.getIDataFiles()

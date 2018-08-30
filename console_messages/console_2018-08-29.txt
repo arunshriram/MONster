@@ -1,0 +1,8 @@
+===============================================================
+||    Welcome to MONster, arunshriram! No need to be afraid, this MONster's on your side.    ||
+===============================================================
+The date is August 29, 2018. The time is 14:30.
+No previous run information found!
+Could not load Qchi image.
+Could not load stitched image.
+Could not load integrated graph.

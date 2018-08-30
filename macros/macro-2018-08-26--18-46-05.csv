@@ -1,6 +1,0 @@
-stitch,True
-workflow,False
-transform,False
-integrate,False
-s_data_source,/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Transformed_Mat
-s_proc_dir,/Users/arunshriram/Documents/SLAC Internship/test_data/k5/Processed_Transform_Process_1/Processed_Stitch

@@ -213,7 +213,7 @@ class TransformThread(QThread):
             save_path = str(self.processedPath)
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
-            with open("Bookkeeping/thisRun.txt", 'w') as runFile:
+            with open("~/Bookkeeping/thisRun.txt", 'w') as runFile:
                 
                 runFile.write("t_data_source, " + str(self.dataPath)+'\n')
                 runFile.write("t_calib_source, " + str(self.calibPath)+'\n')
@@ -301,6 +301,7 @@ class TransformThread(QThread):
         try:
             Q, chi, cake, = self.data_reduction(d, Rot, tilt, lamda, x0, y0, pixelSize)
         except: # non-optimal parameters
+            traceback.print_exc()
             self.emit(SIGNAL("addToConsole(PyQt_PyObjct)"), "Could not perform data reduction!")
             print("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
             return
@@ -347,13 +348,13 @@ class TransformThread(QThread):
 def writeTransformProperties():
     try:
         properties = []
-        with open("Bookkeeping/thisRun.txt", 'r') as thisrun:
+        with open("~/Bookkeeping/thisRun.txt", 'r') as thisrun:
             properties.append( thisrun.readline().split(", ")[1].rstrip())
             properties.append( thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
 
-        with open('Bookkeeping/Properties.csv', 'rb') as prop:
+        with open('~/Bookkeeping/Properties.csv', 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         detectors = Properties["detectors"]
@@ -407,7 +408,7 @@ def writeTransformProperties():
     
 
         
-        with open("Bookkeeping/Properties.csv", 'wb') as prop:
+        with open("~/Bookkeeping/Properties.csv", 'wb') as prop:
             writer = csv.writer(prop)
             for key, value in property_dict.items():
                 writer.writerow([key, value])    

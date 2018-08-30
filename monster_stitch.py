@@ -37,10 +37,10 @@ def generateStitchWidgets(self):
     self.images_select_files_button.setStyleSheet('border: none;')
     self.stitch_folder_button = QPushButton("Select a folder")
     self.stitch_folder_button.setFixedSize(self.stitch_folder_button.sizeHint().width(), self.stitch_folder_button.sizeHint().height())
-    self.stitch_folder_button.setStyleSheet("background-color: rgb(159, 97, 100);")
+    self.stitch_folder_button.setStyleSheet("background-color: rgb(159, 97, 100); color: black;")
      
     self.stitch_abort = QPushButton('Abort Stitching')
-    self.stitch_abort.setStyleSheet("background-color: rgb(255, 140, 140);")              
+    self.stitch_abort.setStyleSheet("background-color: rgb(255, 140, 140); color: black;")              
     self.stitch_abort.resize(self.stitch_abort.sizeHint().width(), self.stitch_abort.sizeHint().height())
 
     # self.stitch_abort.setFixedSize(150, 30)    
@@ -57,7 +57,7 @@ def generateStitchWidgets(self):
     self.stitch_saveLocation_button.setStyleSheet('background-color: rgba(34, 200, 157, 100)');     
 
     self.stitch_start_button = QPushButton('Begin Stitching!')
-    self.stitch_start_button.setStyleSheet('background-color: rgb(80, 230, 133);')
+    self.stitch_start_button.setStyleSheet('background-color: rgb(80, 230, 133); color: black;')
     # self.stitch_start_button.setFixedSize(160, 30)
     self.stitch_start_button.resize(self.stitch_start_button.sizeHint().width(), self.stitch_start_button.sizeHint().height())
 
@@ -91,11 +91,11 @@ def generateStitchWidgets(self):
     # self.stitch_saveMacroButton.setFixedHeight(30)
     self.stitch_saveMacroButton.resize(self.stitch_saveMacroButton.sizeHint().width(), self.stitch_saveMacroButton.sizeHint().height())
 
-    self.stitch_saveMacroButton.setStyleSheet("background-color: rgb(255, 251, 208);")
+    self.stitch_saveMacroButton.setStyleSheet("background-color: rgb(255, 251, 208);color: black;")
     self.stitch_addToQueueButton = QPushButton("Add this configuration to the queue")
     # self.stitch_addToQueueButton.setMaximumWidth(220)
     # self.stitch_addToQueueButton.setFixedHeight(30)
-    self.stitch_addToQueueButton.setStyleSheet("background-color: rgb(255, 207, 117);")
+    self.stitch_addToQueueButton.setStyleSheet("background-color: rgb(255, 207, 117); color: black;")
     self.stitch_addToQueueButton.resize(self.stitch_addToQueueButton.sizeHint().width(), self.stitch_addToQueueButton.sizeHint().height())
 
     self.stitch_files_to_process = None
@@ -161,7 +161,7 @@ def saveStitchMacro(self, fileName=''):
     macrodict["integrate"] = 'False'
     macrodict["stitch"] = 'True'
     try:
-        data_source = str(self.images_select.text())
+        data_source = str(self.images_select.text()).lstrip().rstrip()
         if not os.path.exists(data_source):
             displayError(self, "Please select an existing stitch data source directory.")
             return
@@ -197,7 +197,7 @@ def saveStitchMacro(self, fileName=''):
         fileName += ".csv"        
     # If anything else is changed after this, the editor won't let you add to the queue without saving again
 
-    s_data_source = str(self.images_select.text())
+    s_data_source = str(self.images_select.text()).lstrip().rstrip()
     if not os.path.exists(s_data_source):
         displayError(self, "Please select a stitch data source!")
         return
@@ -259,6 +259,11 @@ def beginStitch(self):
         self.yes.clicked.connect(y)
         self.win.show()
         self.win.raise_()
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.win.move(frameGm.topLeft())
         while not self.clicked:
             time.sleep(.3)
             QApplication.processEvents()
@@ -266,12 +271,12 @@ def beginStitch(self):
             return
     self.disableWidgets()
     
-    if not os.path.exists(str(self.images_select.text())):
+    if not os.path.exists(str(self.images_select.text()).lstrip().rstrip()):
         self.addToConsole("Please select a valid data source!")
         self.enableWidgets()
         return
     else:
-        self.stitch_files_to_process = str(self.images_select.text())
+        self.stitch_files_to_process = str(self.images_select.text()).lstrip().rstrip()
     if  str(self.stitch_saveLocation.text()) == "":
         self.addToConsole("Make sure you select a location to save files!")
         self.enableWidgets()        
@@ -371,3 +376,9 @@ def displayError(self, message):
     self.ok.clicked.connect(lambda: self.win.close())
     self.win.show()
     self.win.raise_()
+
+    frameGm = self.frameGeometry()
+    screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+    centerPoint = QApplication.desktop().screenGeometry(screen).center()
+    frameGm.moveCenter(centerPoint)
+    self.win.move(frameGm.topLeft())
