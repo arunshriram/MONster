@@ -14,13 +14,9 @@ INTRODUCTION
 MONster is a GUI application designed as a user-friendly and intuitive
 way to conduct a variety of data processing on detector images. The GUI
 was based on batch processing and stitching code written by 
-Robert Tang-Kong, Fang Ren, and Melissa Wette. The GUI runs on Mac OS,
+Robert Tang-Kong, Fang Ren, and Melissa Wette. The GUI runs on Mac OS X,
+Windows, and Linux. 
 
-SPECtre is a GUI application designed as a user-friendly and intuitive
-way to interface the SPEC terminal. SPECtre was originally designed by 
-Stefan Mannsfeld in 2011, but it was designed for Windows. This new version
-will allow you to work on OS X, Windows, and Linux! This version is only for 
-Linux users. 
 
 SPECtre will let you choose from a select
 group of motors depending on whether you are a privileged user or a regular user.
