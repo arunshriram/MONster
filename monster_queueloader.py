@@ -831,6 +831,7 @@ class MacroEditor(QWidget):
                     return
             except:
                 return
+            macrodict['transform_integrate'] = 'False'
                 
             macrodict["t_data_source"] = checked_values[0]
             macrodict['t_calib_source'] = checked_values[1]
