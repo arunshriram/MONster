@@ -58,6 +58,11 @@ class TransformThread(QThread):
 
     def __init__(self, windowreference, processedPath, calibPath, detectorData, files_to_process, increment):
         QThread.__init__(self)
+        self.home = os.path.expanduser("~")
+        self.bkPath = os.path.join(self.home, "MONster_Bookkeeping")
+        self.pPath = os.path.join(self.bkPath, "Properties.csv")
+        self.tPath = os.path.join(self.bkPath, "thisRun.txt")
+        self.mPath = os.path.join(self.home, "macros")   
         self.calibPath = calibPath
         self.processedPath = processedPath
         self.detectorData = detectorData
@@ -213,7 +218,7 @@ class TransformThread(QThread):
             save_path = str(self.processedPath)
             imageFilename = os.path.basename(filePath.rsplit('.', 1)[0])
             # Edit the "lastrun.txt" file so that if the program is stopped or aborted, next time the user launches MONster, the current information will be loaded
-            with open("~/Bookkeeping/thisRun.txt", 'w') as runFile:
+            with open(self.tPath, 'w') as runFile:
                 
                 runFile.write("t_data_source, " + str(self.dataPath)+'\n')
                 runFile.write("t_calib_source, " + str(self.calibPath)+'\n')
@@ -348,13 +353,18 @@ class TransformThread(QThread):
 def writeTransformProperties():
     try:
         properties = []
-        with open("~/Bookkeeping/thisRun.txt", 'r') as thisrun:
+        home = os.path.expanduser("~")
+        bkPath = os.path.join(home, "MONster_Bookkeeping")
+        pPath = os.path.join(bkPath, "Properties.csv")
+        tPath = os.path.join(bkPath, "thisRun.txt")
+        mPath = os.path.join(home, "macros")        
+        with open(tPath, 'r') as thisrun:
             properties.append( thisrun.readline().split(", ")[1].rstrip())
             properties.append( thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
 
-        with open('~/Bookkeeping/Properties.csv', 'rb') as prop:
+        with open(pPath, 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         detectors = Properties["detectors"]
@@ -408,7 +418,7 @@ def writeTransformProperties():
     
 
         
-        with open("~/Bookkeeping/Properties.csv", 'wb') as prop:
+        with open(pPath, 'wb') as prop:
             writer = csv.writer(prop)
             for key, value in property_dict.items():
                 writer.writerow([key, value])    

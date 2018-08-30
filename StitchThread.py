@@ -32,6 +32,11 @@ class StitchThread(QThread):
 
     def __init__(self, windowreference, dataPath, savePath, increment):
         QThread.__init__(self)
+        self.home = os.path.expanduser("~")
+        self.bkPath = os.path.join(self.home, "MONster_Bookkeeping")
+        self.pPath = os.path.join(self.bkPath, "Properties.csv")
+        self.tPath = os.path.join(self.bkPath, "thisRun.txt")
+        self.mPath = os.path.join(self.home, "macros")   
         self.windowreference = windowreference
         self.dataPath = dataPath
         self.savePath = savePath
@@ -228,7 +233,7 @@ class StitchThread(QThread):
                     #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
                     #self.emit(SIGNAL( "addToConsole(PyQt_PyObject)"), "Image %s: shape of Qchi0raw: %s, max is %s, min is %s" % (x, str(np.shape(Qchi0raw)), np.max(Qchi0raw), np.min(Qchi0raw)))
                     #self.emit(SIGNAL("addToConsole(PyQt_PyObject)"), "***************************")
-                    with open("Bookkeeping/thisRun.txt", 'w') as runFile:
+                    with open(self.tPath, 'w') as runFile:
                         runFile.write("s_data_source, " + str(self.dataPath) + "\n")
                         runFile.write("s_processed_loc, " + str(self.savePath) + "\n")
                         imageFilename = os.path.basename(fullname)
@@ -334,13 +339,17 @@ def extents(f):
 def writeStitchProperties():
     try:
         properties = []
-
-        with open('Bookkeeping/Properties.csv', 'rb') as prop:
+        home = os.path.expanduser("~")
+        bkPath = os.path.join(home, "MONster_Bookkeeping")
+        pPath = os.path.join(bkPath, "Properties.csv")
+        tPath = os.path.join(bkPath, "thisRun.txt")
+        mPath = os.path.join(home, "macros")
+        with open(pPath, 'rb') as prop:
                 reader = csv.reader(prop)
                 Properties = dict(reader)
         detectors = Properties["detectors"]
      
-        with open("Bookkeeping/thisRun.txt", 'r') as thisrun:
+        with open(tPath, 'r') as thisrun:
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
             properties.append(thisrun.readline().split(", ")[1].rstrip())
@@ -398,7 +407,7 @@ def writeStitchProperties():
         property_dict["detectors"] = detectors
     
 
-        with open("Bookkeeping/Properties.csv", 'wb') as prop:
+        with open(pPath, 'wb') as prop:
             writer = csv.writer(prop)
             for key, value in property_dict.items():
                 writer.writerow([key, value])    

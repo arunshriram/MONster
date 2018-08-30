@@ -76,7 +76,7 @@ def generateIntegrateWidgets(self):
     self.int_file_button.setStyleSheet("background-color: rgb(248, 222, 189); color: black;")
     
     self.miconsole.setFont(QFont("Avenir", 14))
-    self.miconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")               
+    self.miconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240); color: black;")               
     self.q_min_label = QLabel('Q Min:')
     self.q_min_label.setStyleSheet("QLabel {background-color : rgb(29, 30, 50); color: white; }")
     self.q_min = ClickableLineEdit('0.0')
@@ -443,8 +443,8 @@ def integrateThreadStart(self):
 # Compiles the information on the current integrate tab page into a macro and adds it to the queue
 def addIntegrateCurrentToQueue(self):
     cur_time = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
-    name = ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/macros/stitch-macro-%s') %(cur_time)
-    self.addToConsole("Saving this page in directory \"macros\" as \"stitch-macro-%s\" and adding to the queue..." % (cur_time))
+    name = (os.path.join(self.mPath, '/stitch-macro-%s' %(cur_time)))
+    self.addToConsole("Saving this page in directory \"~/macros\" as \"stitch-macro-%s\" and adding to the queue..." % (cur_time))
     saved = saveIntegrateMacro(self, name)
     if saved is None:
         return    
@@ -467,6 +467,7 @@ def saveIntegrateMacro(self, fileName=''):
     macrodict["transform"] = 'False'
     macrodict["stitch"] = 'False'
     macrodict["integrate"] = 'True'
+    macrodict['transform_integrate'] = 'False'
     try:
         if str(self.int_processed_location.text()) == "":
             self.int_processed_location.setText(os.path.join(str(self.int_data_source.text()).lstrip().rstrip(), "Processed_Integrate"))
@@ -512,7 +513,7 @@ def saveIntegrateMacro(self, fileName=''):
 
     # File saving ********************************
     current = os.getcwd()
-    final_dir = os.path.join(current, r'macros')
+    final_dir = os.path.join(current, self.mPath)
     if not os.path.exists(final_dir):
         os.makedirs(final_dir)
             
@@ -560,11 +561,11 @@ def saveIntegrateMacro(self, fileName=''):
 # Loads the appropriate files based on the data source the user selects
 def getIntDataSourceDirectoryPath(self):
     try:
-        folderpath = str(QFileDialog.getExistingDirectory())
+        folderpath = str(QFileDialog.getExistingDirectory(self, 'Choose your data', self.home))
         if folderpath != '':
             self.int_data_source.setText(folderpath)
             self.int_data_label.setText("Current data source: (folder)")
-            self.int_processed_location.setText(str(self.data_source.text())  + "/Processed_Transform")
+            self.int_processed_location.setText(str(self.int_data_source.text())  + "/Processed_Integrate")
             self.i_files_to_process = [folderpath]
         self.raise_()
     except:
@@ -573,7 +574,7 @@ def getIntDataSourceDirectoryPath(self):
  # Loads the appropriate files based on the data source the user selects
 def getIntDataFiles(self):
     try:
-        filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+        filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.", self.home)
         filenames = [str(filename) for  filename in filenames]
         if len(filenames) < 2:
             self.int_data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))

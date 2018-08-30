@@ -102,7 +102,11 @@ class Macro():
 class MacroEditor(QWidget):
     def __init__(self, windowreference):
         QWidget.__init__(self)
-    
+        self.home = os.path.expanduser("~")
+        self.bkpath = os.path.join(self.home, "MONster_Bookkeeping")
+        self.pPath = os.path.join(self.bkpath, "Properties.csv")
+        self.tPath = os.path.join(self.bkpath, "thisRun.txt")
+        self.mPath = os.path.join(self.home, "macros")    
         self.fieldsChanged = False
         self.curMacro = None        
         self.t_files_to_process = []        
@@ -598,13 +602,13 @@ class MacroEditor(QWidget):
 
     
     def setStitchSaveLocation(self):
-        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files"))
+        path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", self.home))
         if path !='':
             self.stitch_saveLocation.setText(os.path.join(path, "Processed_Stitch"))
         self.raise_()
     def stitchImageSelect(self):
         try:
-            folderpath = str(QFileDialog.getExistingDirectory(directory=os.getcwd()))
+            folderpath = str(QFileDialog.getExistingDirectory(self, 'Select your data source', self.home))
             if folderpath != '':
                 self.images_select.setText(folderpath)
                 self.stitch_saveLocation.setText(os.path.join(folderpath, "Processed_Stitch"))
@@ -620,7 +624,7 @@ class MacroEditor(QWidget):
       # Loads the appropriate files based on the data source the user selects
     def getTransformDataSourceDirectoryPath(self):
         try:
-            folderpath = str(QFileDialog.getExistingDirectory())
+            folderpath = str(QFileDialog.getExistingDirectory(self, "Select your data source", self.home))
             if folderpath != '':
                 self.data_source.setText(folderpath)
                 self.data_label.setText("Current data source: (folder)")
@@ -633,7 +637,7 @@ class MacroEditor(QWidget):
      # Loads the appropriate files based on the data source the user selects
     def getTransformDataSourceFiles(self):
         try:
-            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.", self.home)
             filenames = [str(filename) for  filename in filenames]
             if len(filenames) < 2:
                 self.data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
@@ -651,7 +655,7 @@ class MacroEditor(QWidget):
        # Loads the appropriate files based on the data source the user selects
     def getIntegrateDataSourceDirectoryPath(self):
         try:
-            folderpath = str(QFileDialog.getExistingDirectory())
+            folderpath = str(QFileDialog.getExistingDirectory(self, "Select your data source.", self.home))
             if folderpath != '':
                 self.int_data_source.setText(folderpath)
                 self.int_data_label.setText("Current data source: (folder)")
@@ -664,7 +668,7 @@ class MacroEditor(QWidget):
         # Loads the appropriate files based on the data source the user selects
     def getIntegrateDataSourceFiles(self):
         try:
-            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.")
+            filenames = QFileDialog.getOpenFileNames(self, "Select the files you wish to use.", self.home)
             filenames = [str(filename) for  filename in filenames]
             if len(filenames) < 2:
                 self.int_data_label.setText("Current data source: %s" % os.path.basename(filenames[0]))
@@ -680,7 +684,7 @@ class MacroEditor(QWidget):
             self.addToConsole("Did not select a data source.")   
         
     def getCalibSourcePath(self):
-        path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/calib/')))
+        path = str(QFileDialog.getOpenFileName(self, "Select Calibration File", self.home))
         if path !='':
             self.calib_source.setText(path)
             self.loadCalibration()
@@ -880,7 +884,7 @@ class MacroEditor(QWidget):
 
         # File saving ********************************
         current = os.getcwd()
-        final_dir = os.path.join(current, r'macros')
+        final_dir = os.path.join(current, self.mPath)
         if not os.path.exists(final_dir):
             os.makedirs(final_dir)
                 
@@ -991,7 +995,7 @@ class MacroEditor(QWidget):
     def loadMacro(self, name=""):
         if name == False:
             current = os.getcwd()
-            final_dir = os.path.join(current, r'macros')
+            final_dir = os.path.join(current, self.mPath)
             if os.path.exists(final_dir):
                 filename = QFileDialog.getOpenFileName(self, "Select your macro", directory=final_dir)
             else:   
@@ -1203,7 +1207,7 @@ def generateQueueWidgets(self):
     self.qconsole.moveCursor(QTextCursor.End)
 
     self.qconsole.setFont(QFont("Avenir", 14))
-    self.qconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")           
+    self.qconsole.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);  color: black;")           
     self.startQueueButton = QPushButton("Start queue")
     # self.startQueueButton.setFixedWidth(150)
     self.startQueueButton.setStyleSheet("background-color: rgb(100, 215, 76); color: black;")
@@ -1691,7 +1695,7 @@ def saveQueue(self):
         newdict = {"Process": i + 1, "filename" : self.macroQueue[i].getFilename(), "dict": self.macroQueue[i].getMacroDict()}        
         dict_list.append(newdict)
         
-    fname = str(QFileDialog.getSaveFileName(self, "Select the location you wish to save your queue", "queueList.json"))
+    fname = str(QFileDialog.getSaveFileName(self, "Select the location you wish to save your queue", self.home))
     self.raise_()
     if fname == "":
         self.addToConsole("Queue list not saved!")
@@ -1703,7 +1707,7 @@ def saveQueue(self):
 
 
 def loadQueue(self):
-    fname = str(QFileDialog.getOpenFileName(self, "Select a queue JSON file"))
+    fname = str(QFileDialog.getOpenFileName(self, "Select a queue JSON file", self.home))
     self.raise_()
     if fname == "":
         self.addToConsole("No queue list selected!")

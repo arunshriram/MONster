@@ -84,7 +84,7 @@ def generateStitchWidgets(self):
     self.stitch_data_label = QLabel("Current data folder:")
     self.stitch_data_label.setStyleSheet("QLabel {color: white;}")
     self.stitch_console.setFont(QFont('Avenir', 14))
-    self.stitch_console.setStyleSheet('margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);')
+    self.stitch_console.setStyleSheet('margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);  color: black;')
     
     self.stitch_saveMacroButton = QPushButton("Save as a macro")
     # self.stitch_saveMacroButton.setMaximumWidth(160)
@@ -138,8 +138,8 @@ def generateStitchLayout(self):
 # Compiles the information on the current stitch tab page into a macro and adds it to the queue
 def addStitchCurrentToQueue(self):
     cur_time = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
-    name = ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/macros/stitch-macro-%s') %(cur_time)
-    self.addToConsole("Saving this page in directory \"macros\" as \"stitch-macro-%s\" and adding to the queue..." % (cur_time))
+    name = (os.path.join(self.mPath, 'stitch-macro-%s' %(cur_time)))
+    self.addToConsole("Saving this page in directory \"~/macros\" as \"stitch-macro-%s\" and adding to the queue..." % (cur_time))
     saved = saveStitchMacro(self, name)
     if saved is None:
         return
@@ -160,6 +160,7 @@ def saveStitchMacro(self, fileName=''):
     macrodict["transform"] = 'False'
     macrodict["integrate"] = 'False'
     macrodict["stitch"] = 'True'
+    macrodict['transform_integrate'] = 'False'
     try:
         data_source = str(self.images_select.text()).lstrip().rstrip()
         if not os.path.exists(data_source):
@@ -181,7 +182,7 @@ def saveStitchMacro(self, fileName=''):
 
     # File saving ********************************
     current = os.getcwd()
-    final_dir = os.path.join(current, r'macros')
+    final_dir = os.path.join(current, self.mPath)
     if not os.path.exists(final_dir):
         os.makedirs(final_dir)
             
@@ -302,7 +303,7 @@ def beginStitch(self):
 # Retreives and stores the data source path for stitch processing
 def stitchImageSelect(self):
     try:
-        folderpath = str(QFileDialog.getExistingDirectory(directory=os.getcwd()))
+        folderpath = str(QFileDialog.getExistingDirectory(self, "Select your data source", self.home))
         if folderpath != '':
             self.images_select.setText(folderpath)
             self.stitch_saveLocation.setText(os.path.join(folderpath, "Processed_Stitch"))
@@ -352,7 +353,7 @@ def setStitchImage(self, filename):
 # None -> None
 # Sets the processed file location for stitch
 def setStitchSaveLocation(self):
-    path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files"))
+    path = str(QFileDialog.getExistingDirectory(self, "Select a location for processed files", self.home))
     if path !='':
         self.stitch_saveLocation.setText(os.path.join(path, "Processed_Stitch"))
     self.raise_()

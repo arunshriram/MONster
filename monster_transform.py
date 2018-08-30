@@ -83,7 +83,7 @@ def generateTransformWidgets(self):
     self.console.setMaximumHeight(400)
     self.console.setFont(QFont("Avenir", 14))
     self.console.moveCursor(QTextCursor.End)
-    self.console.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240);")                
+    self.console.setStyleSheet("margin:3px; border:1px solid rgb(0, 0, 0); background-color: rgb(240, 255, 240); color: black;")                
 
     self.custom_calib_label = QLabel("Customize your calibration here: ")
     self.custom_calib_label.setStyleSheet("QLabel {background-color : rgb(29, 30, 50); color: white; }")
@@ -270,8 +270,8 @@ def generateTransformLayout(self):
 # Compiles the information on the current transform tab page into a macro and adds it to the queue
 def addTransformCurrentToQueue(self):
     cur_time = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
-    name = ('/Users/arunshriram/Documents/SLAC Internship/monhitp-gui/macros/transform-macro-%s') %(cur_time)
-    self.addToConsole("Saving this page in directory \"macros\" as \"transform-macro-%s\" and adding to the queue..." % (cur_time))
+    name = (os.path.join(self.mPath, 'transform-macro-%s' %(cur_time)))
+    self.addToConsole("Saving this page in directory \"~/macros\" as \"transform-macro-%s\" and adding to the queue..." % (cur_time))
     saved = saveTransformMacro(self, name)
     if saved is None:
         return
@@ -292,6 +292,7 @@ def saveTransformMacro(self, fileName=''):
     macrodict["transform"] = "True"
     macrodict["integrate"] = "False"
     macrodict["stitch"] = "False"
+    macrodict['transform_integrate'] = 'False'
     try:
         calib_source = str(self.calib_source.text())
         dx = len(str(self.dcenterx.text()))
@@ -341,7 +342,7 @@ def saveTransformMacro(self, fileName=''):
 
     # File saving ********************************
     current = os.getcwd()
-    final_dir = os.path.join(current, r'macros')
+    final_dir = os.path.join(current, self.mPath)
     if not os.path.exists(final_dir):
         os.makedirs(final_dir)
             
@@ -445,11 +446,11 @@ def transformThreadStart(self):
         self.enableWidgets()
         return
 
-    bkgdPath = os.path.expanduser('~/monHiTp/testBkgdImg/bg/a40_th2p0_t45_center_bg_0001.tif')
+    #bkgdPath = os.path.expanduser('~/monHiTp/testBkgdImg/bg/a40_th2p0_t45_center_bg_0001.tif')
     #configPath = tkFileDialog.askopenfilename(title='Select Config File')
-    if bkgdPath is '':
-        self.win.addToConsole('No bkgd file supplied, aborting...')
-        return
+    #if bkgdPath is '':
+        #self.win.addToConsole('No bkgd file supplied, aborting...')
+        #return
 
    
     self.addToConsole('Calibration File: ' + calibPath)
