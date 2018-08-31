@@ -1,4 +1,0 @@
-t_data_source, /Users/arunshriram/Documents/SLAC Internship/test_data/test
-t_calib_source, /Users/arunshriram/Documents/SLAC Internship/MONster/calib/cal_28mar18.calib
-t_processed_loc, /Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1
-two_d_image, /Users/arunshriram/Documents/SLAC Internship/test_data/test/Processed_Transform1_Process_1/Transformed_Images/k5_022318_1_24x24_t45_0300_gamma.png
